@@ -1,11 +1,11 @@
-require 'fastlane/action'
+# require 'fastlane/action'
 require_relative '../helper/lokalise_metadata_helper'
 
 module Fastlane
   module Actions
     class LokaliseMetadataAction < Action
 
-
+      @params
       def self.run(params)
         @params = params
         action = params[:action]

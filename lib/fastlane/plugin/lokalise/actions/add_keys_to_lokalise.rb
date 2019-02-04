@@ -1,4 +1,4 @@
-require 'fastlane/action'
+# require 'fastlane/action'
 require_relative '../helper/add_keys_to_lokalise_helper'
 
 module Fastlane

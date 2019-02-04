@@ -32,4 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency('rubocop-require_tools')
   spec.add_development_dependency('simplecov')
   spec.add_development_dependency('fastlane', '>= 2.112.0')
+  spec.add_development_dependency('net/http')
+  spec.add_development_dependency('zip')
+  spec.add_development_dependency('rubygems')
 end
