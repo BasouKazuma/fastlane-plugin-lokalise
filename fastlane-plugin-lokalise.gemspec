@@ -22,7 +22,6 @@ Gem::Specification.new do |spec|
   # since this would cause a circular dependency
 
   # spec.add_dependency 'your-dependency', '~> 1.0.0'
-  spec.add_dependency 'net/http'
   spec.add_dependency 'zip'
   spec.add_dependency 'rubygems'
 
