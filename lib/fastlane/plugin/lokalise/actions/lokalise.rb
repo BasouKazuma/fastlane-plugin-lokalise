@@ -1,6 +1,3 @@
-# require 'fastlane/action'
-require_relative '../helper/lokalise_helper'
-
 module Fastlane
   module Actions
     class LokaliseAction < Action

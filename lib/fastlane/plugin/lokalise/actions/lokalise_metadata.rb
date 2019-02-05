@@ -1,6 +1,3 @@
-# require 'fastlane/action'
-require_relative '../helper/lokalise_metadata_helper'
-
 module Fastlane
   module Actions
     class LokaliseMetadataAction < Action
