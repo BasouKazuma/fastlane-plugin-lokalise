@@ -1,3 +1,7 @@
+require 'fastlane/action'
+require_relative '../helper/lokalise_metadata_helper'
+require 'net/http'
+
 module Fastlane
   module Actions
     class LokaliseMetadataAction < Action
@@ -174,7 +178,6 @@ module Fastlane
 
 
       def self.make_request(path, data)
-        require 'net/http'
 
         request_data = {
           api_token: @params[:api_token],
@@ -669,7 +672,7 @@ module Fastlane
 
 
       def self.is_supported?(platform)
-        platform == :ios
+        [:ios, :mac].include? platform 
       end
 
 

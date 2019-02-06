@@ -1,9 +1,14 @@
+require 'fastlane/action'
+require_relative '../helper/lokalise_helper'
+require 'net/http'
+require 'zip'
+require 'rubygems'
+
 module Fastlane
   module Actions
     class LokaliseAction < Action
 
       def self.run(params)
-        require 'net/http'
 
         token = params[:api_token]
         project_identifier = params[:project_identifier]
@@ -76,8 +81,6 @@ module Fastlane
 
 
       def self.unzip_file(file, destination, clean_destination)
-        require 'zip'
-        require 'rubygems'
         Zip::File.open(file) { |zip_file|
           if clean_destination then
             UI.message "Cleaning destination folder ♻️"
