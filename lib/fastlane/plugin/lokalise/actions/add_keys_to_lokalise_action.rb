@@ -1,5 +1,3 @@
-require 'fastlane/action'
-require_relative '../helper/add_keys_to_lokalise_helper'
 require 'net/http'
 
 module Fastlane

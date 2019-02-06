@@ -1,5 +1,3 @@
-require 'fastlane/action'
-require_relative '../helper/lokalise_helper'
 require 'net/http'
 require 'zip'
 require 'rubygems'
