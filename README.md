@@ -2,6 +2,7 @@
 
 This project is a port of the [lokalise-fastlane-actions](https://github.com/lokalise/lokalise-fastlane-actions) project. The goal is for it to be packaged as a Fastlane Plugin that can be imported as a gem.
 
+
 ## Install
 
 This can be added with the following command:
@@ -13,6 +14,7 @@ Or added to the Pluginfile as:
 ```
 gem 'fastlane-plugin-lokalise', git: 'https://github.com/BasouKazuma/fastlane-plugin-lokalise'
 ```
+
 
 ## Actions
 
@@ -53,3 +55,16 @@ Parameters:
 - `platform_mask`. Platform mask to asign to keys *(1 is iOS, 2 is Android, 4 is Web and 16 is Other)*.
 - `keys`. Keys to add *(must be passed as array of strings)*.
 
+
+## Development
+
+This can be locally built and installed as a gem by doing the following on the repo:
+```bash
+bundle install
+rake install
+```
+
+This can be published using:
+```bash
+rake release
+```
