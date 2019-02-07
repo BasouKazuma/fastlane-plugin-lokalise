@@ -13,7 +13,11 @@ module Fastlane
         when "update_itunes"
           key_file = metadata_key_file_itunes()
           metadata = get_metadata_from_lokalise_itunes()
-          update_itunes_metadata_files(metadata)
+          run_deliver_action(metadata)
+        when "download_lokalise_itunes"
+          key_file = metadata_key_file_itunes()
+          metadata = get_metadata_from_lokalise_itunes()
+          write_lokalise_translations_to_itunes_metadata(metadata)
         when "update_googleplay"
           release_number = params[:release_number]
           UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
@@ -82,17 +86,21 @@ module Fastlane
       end
 
 
-      def self.update_itunes_metadata_files(metadata)
+      def self.write_lokalise_translations_to_itunes_metadata(metadata)
         metadata_key_file_itunes().each { |key, parameter|
           final_translations = {}
-
           metadata.each { |lang, translations|
             if translations.empty? == false
               translation = translations[key]
               final_translations[lang] = translation if translation != nil && translation.empty? == false
-              output_file = "./fastlane/metadata/#{lang}/#{parameter}.txt"
+              path = File.join('.', 'fastlane', 'metadata', lang)
+              filename = "#{parameter}.txt"
+              output_file = File.join(path, filename)
+              FileUtils.mkdir_p(path) unless File.exist?(path)
               puts "Updating '#{output_file}'..."
-              File.open(output_file, "w") {|f| f.write(final_translations[lang]) }
+              File.open(output_file, 'wb') do |file|
+                file.write(final_translations[lang])
+              end
             end 
           }
         }
@@ -646,7 +654,7 @@ module Fastlane
                                        optional: false,
                                        is_string: true,
                                        verify_block: proc do |value|
-                                         UI.user_error! "Action should be update_lokalise_googleplay or update_lokalise_itunes or update_itunes or update_googleplay" unless ["update_lokalise_itunes", "update_lokalise_googleplay", "update_itunes", "update_googleplay"].include? value
+                                         UI.user_error! "Action should be update_lokalise_googleplay or update_lokalise_itunes or update_itunes or update_googleplay" unless ["update_lokalise_itunes", "download_lokalise_itunes", "update_lokalise_googleplay", "update_itunes", "update_googleplay"].include? value
                                        end),
           FastlaneCore::ConfigItem.new(key: :release_number,
                                       description: "Release number is required to update google play",
