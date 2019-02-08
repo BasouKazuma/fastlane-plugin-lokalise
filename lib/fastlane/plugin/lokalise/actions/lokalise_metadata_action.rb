@@ -217,36 +217,32 @@ module Fastlane
       end
 
 
-      def self.upload_metadata(metadata_keys, for_itunes, metadata)
-        
+      def self.upload_metadata(metadata_keys, metadata)
         keys = []
-
         metadata_keys.each do |key, value|
-          key = make_key_object_from_metadata(key, metadata, for_itunes)
+          key = make_key_object_from_metadata(key, metadata)
           if key 
             keys << key
           end
         end
-
         data = {
           data: keys.to_json
         }
-
         make_request("string/set", data)
       end
 
 
       def self.upload_metadata_itunes(metadata)
-        upload_metadata(metadata_key_file_itunes, true, metadata)
+        upload_metadata(metadata_key_file_itunes, metadata)
       end
 
 
       def self.upload_metadata_google_play(metadata)
-        upload_metadata(metadata_key_file_googleplay, false, metadata)
+        upload_metadata(metadata_key_file_googleplay, metadata)
       end
 
 
-      def self.make_key_object_from_metadata(key, metadata, for_itunes)
+      def self.make_key_object_from_metadata(key, metadata)
         key_data = {
           "key" => key,
           "platform_mask" => 16,
