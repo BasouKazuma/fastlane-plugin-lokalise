@@ -264,28 +264,28 @@ module Fastlane
 
       def self.get_metadata_google_play()
         available_languages = google_play_languages
-        return get_metadata(available_languages, "fastlane/metadata/android/", false)
+        return get_metadata(available_languages, "fastlane/metadata/android/")
       end
 
 
       def self.get_metadata_itunes_connect()
         available_languages = itunes_connect_languages
-        return get_metadata(available_languages, "fastlane/metadata/", true)
+        return get_metadata(available_languages, "fastlane/metadata/")
       end
 
 
-      def self.get_metadata(available_languages, folder, for_itunes)
+      def self.get_metadata(available_languages, folder)
         complete_metadata = {}
-
         available_languages.each { |iso_code|
           language_directory = "#{folder}#{iso_code}"
           if Dir.exist? language_directory
             language_metadata = {}
-            if for_itunes
+            case @params[:platform]
+            when "ios"
               metadata_key_file_itunes().each { |key, file|
                 populate_hash_key_from_file(language_metadata, key, language_directory + "/#{file}.txt")
               }
-            else 
+            when "android"
               metadata_key_file_googleplay().each { |key, file|
                 if file == "changelogs"
                   changelog_directory = "#{folder}#{iso_code}/changelogs"
