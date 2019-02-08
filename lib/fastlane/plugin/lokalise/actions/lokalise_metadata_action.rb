@@ -9,51 +9,60 @@ module Fastlane
         @params = params
         action = params[:action]
 
-        case action
-        when "update_itunes"
-          key_file = metadata_key_file_itunes()
-          metadata = get_metadata_from_lokalise_itunes()
-          run_deliver_action(metadata)
-        when "download_lokalise_itunes"
-          key_file = metadata_key_file_itunes()
-          metadata = get_metadata_from_lokalise_itunes()
-          write_lokalise_translations_to_itunes_metadata(metadata)
-        when "update_googleplay"
-          release_number = params[:release_number]
-          UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
-          key_file = metadata_key_file_googleplay
-          metadata = get_metadata_from_lokalise_googleplay()
-          save_metadata_to_files(metadata, release_number)
-          run_supply_action(params[:validate_only])
-        when "update_lokalise_itunes"
-          metadata = get_metadata_itunes_connect()
-          add_languages = params[:add_languages]
-          override_translation = params[:override_translation]
-          if add_languages == true 
-            create_languages(metadata.keys, true)
-          end
-          if override_translation == true
-            upload_metadata_itunes(metadata) unless metadata.empty?
-          else
-            lokalise_metadata = get_metadata_from_lokalise_itunes()
-            filtered_metadata = filter_metadata(metadata, lokalise_metadata)
-            upload_metadata_itunes(filtered_metadata) unless filtered_metadata.empty?
-          end
-        when "update_lokalise_googleplay"
-          metadata = get_metadata_google_play()
-          add_languages = params[:add_languages]
-          override_translation = params[:override_translation]
-          if add_languages == true 
-            create_languages(metadata.keys, false)
-          end
-          if override_translation == true
-            upload_metadata_google_play(metadata) unless metadata.empty?
-          else
-            lokalise_metadata = get_metadata_from_lokalise_googleplay()
-            filtered_metadata = filter_metadata(metadata, lokalise_metadata)
-            upload_metadata_google_play(filtered_metadata) unless filtered_metadata.empty?
+        case ENV["FASTLANE_PLATFORM_NAME"]
+        when "ios"
+            case action
+            when "update_itunes"
+                # key_file = metadata_key_file_itunes()
+                metadata = get_metadata_from_lokalise_itunes()
+                run_deliver_action(metadata)
+            when "download_from_lokalise"
+                # key_file = metadata_key_file_itunes()
+                metadata = get_metadata_from_lokalise_itunes()
+                write_lokalise_translations_to_itunes_metadata(metadata)
+            when "upload_to_lokalise"
+                metadata = get_metadata_itunes_connect()
+                add_languages = params[:add_languages]
+                override_translation = params[:override_translation]
+                if add_languages == true
+                  create_languages(metadata.keys, true)
+                end
+                if override_translation == true
+                  upload_metadata_itunes(metadata) unless metadata.empty?
+                else
+                  lokalise_metadata = get_metadata_from_lokalise_itunes()
+                  filtered_metadata = filter_metadata(metadata, lokalise_metadata)
+                  upload_metadata_itunes(filtered_metadata) unless filtered_metadata.empty?
+                end
+            end
+        when "android"
+          case action
+          when "update_googleplay"
+              release_number = params[:release_number]
+              UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
+              # key_file = metadata_key_file_googleplay
+              metadata = get_metadata_from_lokalise_googleplay()
+              save_metadata_to_files(metadata, release_number)
+              run_supply_action(params[:validate_only])
+          when "download_from_lokalise"
+              # TODO
+          when "upload_to_lokalise"
+              metadata = get_metadata_google_play()
+              add_languages = params[:add_languages]
+              override_translation = params[:override_translation]
+              if add_languages == true 
+                create_languages(metadata.keys, false)
+              end
+              if override_translation == true
+                upload_metadata_google_play(metadata) unless metadata.empty?
+              else
+                lokalise_metadata = get_metadata_from_lokalise_googleplay()
+                filtered_metadata = filter_metadata(metadata, lokalise_metadata)
+                upload_metadata_google_play(filtered_metadata) unless filtered_metadata.empty?
+              end
           end
         end
+
       end
 
 
@@ -650,11 +659,11 @@ module Fastlane
                                          UI.user_error! "Override translation should be true or false" unless [true, false].include? value
                                        end),
           FastlaneCore::ConfigItem.new(key: :action,
-                                       description: "Action to perform (can be update_lokalise_itunes or update_lokalise_googleplay or update_itunes or update_googleplay)",
+                                       description: "Action to perform (update_itunes, update_googleplay, download_from_lokalise, upload_to_lokalise)",
                                        optional: false,
                                        is_string: true,
                                        verify_block: proc do |value|
-                                         UI.user_error! "Action should be update_lokalise_googleplay or update_lokalise_itunes or update_itunes or update_googleplay" unless ["update_lokalise_itunes", "download_lokalise_itunes", "update_lokalise_googleplay", "update_itunes", "update_googleplay"].include? value
+                                         UI.user_error! "Action should be one of the following: update_itunes, update_googleplay, download_from_lokalise, upload_to_lokalise" unless ["update_itunes", "update_googleplay", "download_from_lokalise", "upload_to_lokalise"].include? value
                                        end),
           FastlaneCore::ConfigItem.new(key: :release_number,
                                       description: "Release number is required to update google play",
@@ -678,7 +687,7 @@ module Fastlane
 
 
       def self.is_supported?(platform)
-        [:ios, :mac].include? platform 
+        [:ios, :android, :mac].include? platform
       end
 
 
