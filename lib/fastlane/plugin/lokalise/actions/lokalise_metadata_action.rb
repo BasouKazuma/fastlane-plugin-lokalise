@@ -42,7 +42,7 @@ module Fastlane
               UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
               # key_file = metadata_key_file_googleplay
               metadata = get_metadata_from_lokalise_googleplay()
-              save_metadata_to_files(metadata, release_number)
+              write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
               run_supply_action(params[:validate_only])
           when "download_from_lokalise"
               # TODO
@@ -144,37 +144,19 @@ module Fastlane
       end
 
 
-      def self.run_supply_action(validate_only)
-        config = FastlaneCore::Configuration.create(Actions::SupplyAction.available_options, {})
-        config[:skip_upload_apk] = true
-        config[:skip_upload_aab] = true
-        config[:skip_upload_screenshots] = true
-        config[:skip_upload_images] = true
-        config[:validate_only] = validate_only
-
-        Actions::SupplyAction.run(config)
-      end
-
-
-      def self.save_metadata_to_files(metadata, release_number)
-
+      def self.write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
         translations = {}
-
         metadata_key_file_googleplay().each { |key, parameter|
           final_translations = {}
-
           metadata.each { |lang, translations|
             if translations.empty? == false
               translation = translations[key]
               final_translations[lang] = translation if translation != nil && translation.empty? == false
             end 
           }
-
           translations[parameter.to_sym] = final_translations
         }
-
         FileUtils.rm_rf(Dir['fastlane/metadata/android/*'])
-
         translations.each { |key, parameter|
           parameter.each { |lang, text|
             path = "fastlane/metadata/android/#{lang}/#{key}.txt"
@@ -188,7 +170,17 @@ module Fastlane
             File.write(path, text)
           }
         }
+      end
 
+
+      def self.run_supply_action(validate_only)
+        config = FastlaneCore::Configuration.create(Actions::SupplyAction.available_options, {})
+        config[:skip_upload_apk] = true
+        config[:skip_upload_aab] = true
+        config[:skip_upload_screenshots] = true
+        config[:skip_upload_images] = true
+        config[:validate_only] = validate_only
+        Actions::SupplyAction.run(config)
       end
 
 
