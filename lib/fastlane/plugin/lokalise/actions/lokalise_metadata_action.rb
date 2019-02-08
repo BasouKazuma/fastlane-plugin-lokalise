@@ -115,6 +115,7 @@ module Fastlane
       end
 
 
+      # Deprecated: A fastlane user should just call the deliver command in their own Fastfile
       def self.run_deliver_action(metadata)
         config = FastlaneCore::Configuration.create(Actions::DeliverAction.available_options, {})
         config.load_configuration_file("Deliverfile")
@@ -133,7 +134,7 @@ module Fastlane
             if translations.empty? == false
               translation = translations[key]
               final_translations[lang] = translation if translation != nil && translation.empty? == false
-            end 
+            end
           }
 
           config[parameter.to_sym] = final_translations
@@ -172,6 +173,7 @@ module Fastlane
       end
 
 
+      # Deprecated: A fastlane user should just call the suppy command in their own Fastfile
       def self.run_supply_action(validate_only)
         config = FastlaneCore::Configuration.create(Actions::SupplyAction.available_options, {})
         config[:skip_upload_apk] = true
