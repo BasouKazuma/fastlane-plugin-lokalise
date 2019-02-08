@@ -12,15 +12,13 @@ module Fastlane
         when "ios"
             case @params[:action]
             when "update_itunes"
-                # key_file = metadata_key_file_itunes()
-                metadata = get_metadata_from_lokalise_itunes()
+                metadata = get_metadata_from_lokalise()
                 run_deliver_action(metadata)
             when "download_from_lokalise"
-                # key_file = metadata_key_file_itunes()
-                metadata = get_metadata_from_lokalise_itunes()
+                metadata = get_metadata_from_lokalise()
                 write_lokalise_translations_to_itunes_metadata(metadata)
             when "upload_to_lokalise"
-                metadata = get_metadata_itunes_connect()
+                metadata = get_metadata()
                 add_languages = params[:add_languages]
                 override_translation = params[:override_translation]
                 if add_languages == true
@@ -29,7 +27,7 @@ module Fastlane
                 if override_translation == true
                   upload_metadata_itunes(metadata) unless metadata.empty?
                 else
-                  lokalise_metadata = get_metadata_from_lokalise_itunes()
+                  lokalise_metadata = get_metadata_from_lokalise()
                   filtered_metadata = filter_metadata(metadata, lokalise_metadata)
                   upload_metadata_itunes(filtered_metadata) unless filtered_metadata.empty?
                 end
@@ -39,18 +37,16 @@ module Fastlane
             when "update_googleplay"
                 release_number = params[:release_number]
                 UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
-                # key_file = metadata_key_file_googleplay
-                metadata = get_metadata_from_lokalise_googleplay()
+                metadata = get_metadata_from_lokalise()
                 write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
                 run_supply_action(params[:validate_only])
             when "download_from_lokalise"
                 release_number = params[:release_number]
                 UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
-                # key_file = metadata_key_file_googleplay
-                metadata = get_metadata_from_lokalise_googleplay()
+                metadata = get_metadata_from_lokalise()
                 write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
             when "upload_to_lokalise"
-                metadata = get_metadata_google_play()
+                metadata = get_metadata()
                 add_languages = params[:add_languages]
                 override_translation = params[:override_translation]
                 if add_languages == true 
@@ -59,7 +55,7 @@ module Fastlane
                 if override_translation == true
                   upload_metadata_google_play(metadata) unless metadata.empty?
                 else
-                  lokalise_metadata = get_metadata_from_lokalise_googleplay()
+                  lokalise_metadata = get_metadata_from_lokalise()
                   filtered_metadata = filter_metadata(metadata, lokalise_metadata)
                   upload_metadata_google_play(filtered_metadata) unless filtered_metadata.empty?
                 end
@@ -262,64 +258,66 @@ module Fastlane
       end
 
 
-      def self.get_metadata_google_play()
-        available_languages = google_play_languages
-        return get_metadata(available_languages, "fastlane/metadata/android/")
-      end
-
-
-      def self.get_metadata_itunes_connect()
-        available_languages = itunes_connect_languages
-        return get_metadata(available_languages, "fastlane/metadata/")
-      end
-
-
-      def self.get_metadata(available_languages, folder)
+      def self.get_metadata()
+        case @params[:platform]
+        when "ios"
+          available_languages = itunes_connect_languages
+          default_metadata_path = "fastlane/metadata/"
+        when "android"
+          available_languages = google_play_languages
+          default_metadata_path = "fastlane/metadata/android/"
+        end
+        if @params.has_key?(:metadata_path)
+          metadata_path = @params[:metadata_path]
+        else
+          metadata_path = @params[:metadata_path]
+        end
         complete_metadata = {}
         available_languages.each { |iso_code|
-          language_directory = "#{folder}#{iso_code}"
+          language_directory = File.join(metadata_path, iso_code)
           if Dir.exist? language_directory
             language_metadata = {}
             case @params[:platform]
             when "ios"
               metadata_key_file_itunes().each { |key, file|
-                populate_hash_key_from_file(language_metadata, key, language_directory + "/#{file}.txt")
+                populate_hash_key_from_file(language_metadata, key, File.join(language_directory, "#{file}.txt"))
               }
             when "android"
               metadata_key_file_googleplay().each { |key, file|
                 if file == "changelogs"
-                  changelog_directory = "#{folder}#{iso_code}/changelogs"
+                  changelog_directory = File.join(language_directory, "changelogs")
                   files = Dir.entries("#{changelog_directory}")
                   collectedFiles = files.collect { |s| s.partition(".").first.to_i }
                   sortedFiles = collectedFiles.sort
-                  populate_hash_key_from_file(language_metadata, key, language_directory + "/changelogs/#{sortedFiles.last}.txt")
-                else 
-                  populate_hash_key_from_file(language_metadata, key, language_directory + "/#{file}.txt")
+                  populate_hash_key_from_file(language_metadata, key, File.join(language_directory, "changelogs", "#{sortedFiles.last}.txt"))
+                else
+                  populate_hash_key_from_file(language_metadata, key, File.join(language_directory, "#{file}.txt"))
                 end
               }
             end
             complete_metadata[iso_code] = language_metadata
           end
         }
-
         return complete_metadata
       end
 
 
-      def self.get_metadata_from_lokalise(valid_keys)
+      def self.get_metadata_from_lokalise()
+        case @params[:platform]
+        when "ios"
+          valid_keys = metadata_key_file_itunes().keys
+          valid_languages = itunes_connect_languages_in_lokalise()
+          key_name = "key_ios"
+        when "android"
+          valid_keys = metadata_key_file_googleplay().keys
+          valid_languages = google_play_languages_in_lokalise()
+          key_name = "key_android"
+        end
         data = {
           platform_mask: 16,
           keys: valid_keys.to_json,
         }
         response = make_request("string/list", data)
-        case @params[:platform]
-        when "ios"
-          valid_languages = itunes_connect_languages_in_lokalise()
-          key_name = "key_ios"
-        when "android"
-          valid_languages = google_play_languages_in_lokalise()
-          key_name = "key_android"
-        end
         metadata = {}
         response["strings"].each { |lang, translation_objects|
           if valid_languages.include?(lang)
@@ -337,18 +335,6 @@ module Fastlane
           end
         }
         return metadata
-      end
-
-
-      def self.get_metadata_from_lokalise_itunes()
-        valid_keys = metadata_key_file_itunes().keys
-        return get_metadata_from_lokalise(valid_keys)
-      end
-
-
-      def self.get_metadata_from_lokalise_googleplay()
-        valid_keys = metadata_key_file_googleplay().keys
-        return get_metadata_from_lokalise(valid_keys)
       end
 
 
@@ -621,6 +607,9 @@ module Fastlane
                                        verify_block: proc do |value|
                                           UI.user_error! "No Project Identifier for Lokalise given, pass using `project_identifier: 'identifier'`" unless (value and not value.empty?)
                                        end),
+          FastlaneCore::ConfigItem.new(key: :metadata_path,
+                                       description: "Location where the metadata files should be stored and read from",
+                                       optional: true),
           FastlaneCore::ConfigItem.new(key: :add_languages,
                                        description: "Add missing languages in lokalise",
                                        optional: true,
