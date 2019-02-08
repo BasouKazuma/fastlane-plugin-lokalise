@@ -45,7 +45,11 @@ module Fastlane
               write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
               run_supply_action(params[:validate_only])
           when "download_from_lokalise"
-              # TODO
+              release_number = params[:release_number]
+              UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
+              # key_file = metadata_key_file_googleplay
+              metadata = get_metadata_from_lokalise_googleplay()
+              write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
           when "upload_to_lokalise"
               metadata = get_metadata_google_play()
               add_languages = params[:add_languages]
