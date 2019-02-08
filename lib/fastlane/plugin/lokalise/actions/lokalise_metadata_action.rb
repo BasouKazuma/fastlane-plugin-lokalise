@@ -306,31 +306,26 @@ module Fastlane
       end
 
 
-      def self.get_metadata_from_lokalise(valid_keys, for_itunes)
-
+      def self.get_metadata_from_lokalise(valid_keys)
         data = {
           platform_mask: 16,
           keys: valid_keys.to_json,
         }
-
         response = make_request("string/list", data)
-
-        if for_itunes
-          valid_languages = itunes_connect_languages_in_lokalise() 
-        else
-          valid_languages = google_play_languages_in_lokalise()        
+        case @params[:platform]
+        when "ios"
+          valid_languages = itunes_connect_languages_in_lokalise()
+          key_name = "key_ios"
+        when "android"
+          valid_languages = google_play_languages_in_lokalise()
+          key_name = "key_android"
         end
         metadata = {}
-
         response["strings"].each { |lang, translation_objects|
           if valid_languages.include?(lang)
             translations = {}
             translation_objects.each { |object|
-              if for_itunes
-                key = object["key_ios"]
-              else
-                key = object["key_android"]
-              end
+                key = object[key_name]
               translation = object["translation"]
               if valid_keys.include?(key) && translation != nil && translation.empty? == false 
                 translations[key] = translation
@@ -342,19 +337,18 @@ module Fastlane
           end
         }
         return metadata
-
       end
 
 
       def self.get_metadata_from_lokalise_itunes()
         valid_keys = metadata_key_file_itunes().keys
-        return get_metadata_from_lokalise(valid_keys, true)
+        return get_metadata_from_lokalise(valid_keys)
       end
 
 
       def self.get_metadata_from_lokalise_googleplay()
         valid_keys = metadata_key_file_googleplay().keys
-        return get_metadata_from_lokalise(valid_keys, false)
+        return get_metadata_from_lokalise(valid_keys)
       end
 
 
