@@ -7,11 +7,10 @@ module Fastlane
       @params
       def self.run(params)
         @params = params
-        action = params[:action]
 
-        case ENV["FASTLANE_PLATFORM_NAME"]
+        case @params[:platform]
         when "ios"
-            case action
+            case @params[:action]
             when "update_itunes"
                 # key_file = metadata_key_file_itunes()
                 metadata = get_metadata_from_lokalise_itunes()
@@ -25,7 +24,7 @@ module Fastlane
                 add_languages = params[:add_languages]
                 override_translation = params[:override_translation]
                 if add_languages == true
-                  create_languages(metadata.keys, true)
+                  create_languages(metadata.keys)
                 end
                 if override_translation == true
                   upload_metadata_itunes(metadata) unless metadata.empty?
@@ -36,43 +35,43 @@ module Fastlane
                 end
             end
         when "android"
-          case action
-          when "update_googleplay"
-              release_number = params[:release_number]
-              UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
-              # key_file = metadata_key_file_googleplay
-              metadata = get_metadata_from_lokalise_googleplay()
-              write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
-              run_supply_action(params[:validate_only])
-          when "download_from_lokalise"
-              release_number = params[:release_number]
-              UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
-              # key_file = metadata_key_file_googleplay
-              metadata = get_metadata_from_lokalise_googleplay()
-              write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
-          when "upload_to_lokalise"
-              metadata = get_metadata_google_play()
-              add_languages = params[:add_languages]
-              override_translation = params[:override_translation]
-              if add_languages == true 
-                create_languages(metadata.keys, false)
-              end
-              if override_translation == true
-                upload_metadata_google_play(metadata) unless metadata.empty?
-              else
-                lokalise_metadata = get_metadata_from_lokalise_googleplay()
-                filtered_metadata = filter_metadata(metadata, lokalise_metadata)
-                upload_metadata_google_play(filtered_metadata) unless filtered_metadata.empty?
-              end
-          end
+            case @params[:action]
+            when "update_googleplay"
+                release_number = params[:release_number]
+                UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
+                # key_file = metadata_key_file_googleplay
+                metadata = get_metadata_from_lokalise_googleplay()
+                write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
+                run_supply_action(params[:validate_only])
+            when "download_from_lokalise"
+                release_number = params[:release_number]
+                UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
+                # key_file = metadata_key_file_googleplay
+                metadata = get_metadata_from_lokalise_googleplay()
+                write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
+            when "upload_to_lokalise"
+                metadata = get_metadata_google_play()
+                add_languages = params[:add_languages]
+                override_translation = params[:override_translation]
+                if add_languages == true 
+                  create_languages(metadata.keys)
+                end
+                if override_translation == true
+                  upload_metadata_google_play(metadata) unless metadata.empty?
+                else
+                  lokalise_metadata = get_metadata_from_lokalise_googleplay()
+                  filtered_metadata = filter_metadata(metadata, lokalise_metadata)
+                  upload_metadata_google_play(filtered_metadata) unless filtered_metadata.empty?
+                end
+            end
         end
 
       end
 
 
-      def self.create_languages(languages, for_itunes)
+      def self.create_languages(languages)
         data = {
-          iso: languages.map { |language| fix_language_name(language, for_itunes, true) } .to_json
+          iso: languages.map { |language| fix_language_name(language, true) } .to_json
         }
         make_request("language/add", data)
       end
@@ -256,7 +255,7 @@ module Fastlane
         metadata.each { |iso_code, data|
           translation = data[key]
           unless translation == nil || translation.empty?
-            key_data["translations"][fix_language_name(iso_code, for_itunes, true)] = translation
+            key_data["translations"][fix_language_name(iso_code, true)] = translation
           end
         }
         unless key_data["translations"].empty? 
@@ -342,7 +341,7 @@ module Fastlane
               end
             }
             if translations.empty? == false
-              metadata[fix_language_name(lang, for_itunes)] = translations
+              metadata[fix_language_name(lang)] = translations
             end
           end
         }
@@ -352,13 +351,13 @@ module Fastlane
 
 
       def self.get_metadata_from_lokalise_itunes()
-        valid_keys = metadata_keys_itunes()
+        valid_keys = metadata_key_file_itunes().keys
         return get_metadata_from_lokalise(valid_keys, true)
       end
 
 
       def self.get_metadata_from_lokalise_googleplay()
-        valid_keys = metadata_keys_googleplay()
+        valid_keys = metadata_key_file_googleplay().keys
         return get_metadata_from_lokalise(valid_keys, false)
       end
 
@@ -371,16 +370,6 @@ module Fastlane
         rescue => exception
           raise exception
         end        
-      end
-
-
-      def self.metadata_keys_itunes()
-        return metadata_key_file_itunes().keys
-      end
-
-
-      def self.metadata_keys_googleplay()
-        return metadata_key_file_googleplay().keys
       end
 
 
@@ -411,14 +400,14 @@ module Fastlane
 
       def self.itunes_connect_languages_in_lokalise()
         return itunes_connect_languages().map { |lang| 
-          fix_language_name(lang, true, true) 
+          fix_language_name(lang, true) 
         }
       end
 
 
       def self.google_play_languages_in_lokalise()
         return google_play_languages().map { |lang| 
-          fix_language_name(lang, false, true) 
+          fix_language_name(lang, true) 
         }
       end
 
@@ -541,8 +530,9 @@ module Fastlane
       end
 
 
-      def self.fix_language_name(name, for_itunes, for_lokalise = false)
-        if for_itunes
+      def self.fix_language_name(name, for_lokalise = false)
+        case @params[:platform]
+        when "ios"
           if for_lokalise
             name =  name.gsub("-","_")
             name = "en" if name == "en_US"
@@ -556,7 +546,7 @@ module Fastlane
             name = "es-ES" if name == "es"
             name = "fr-FR" if name == "fr"
           end
-        else
+        when "android"
           if for_lokalise
             name =  name.gsub("-","_")
             name = "tr" if name == "tr_TR"
@@ -626,6 +616,9 @@ module Fastlane
 
       def self.available_options
         [
+          FastlaneCore::ConfigItem.new(key: :platform,
+                                       env_name: "FASTLANE_PLATFORM_NAME",
+                                       description: "Fastlane platform name"),
           FastlaneCore::ConfigItem.new(key: :api_token,
                                        env_name: "LOKALISE_API_TOKEN",
                                        description: "API Token for Lokalise",
