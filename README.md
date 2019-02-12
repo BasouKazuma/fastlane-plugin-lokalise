@@ -14,7 +14,7 @@ fastlane add_plugin lokalise
 
 Or added to the Pluginfile as:
 ```
-gem 'fastlane-plugin-lokalise', git: 'https://github.com/BasouKazuma/fastlane-plugin-lokalise'
+gem 'fastlane-plugin-lokalise'
 ```
 
 
@@ -75,14 +75,14 @@ lokalise_metadata(
 )
 ```
 
-Then you can upload what is currently in the `fastlane/metadata` folder to the App Store using:
+Then you can upload what is currently in the `fastlane/metadata` folder to the App Store using the deliver action:
 https://docs.fastlane.tools/actions/deliver/
 ```ruby
 deliver(
     ...
 )
 ```
-Or for Google Play:
+Or for Google Play the supply action:
 https://docs.fastlane.tools/actions/supply/
 ```ruby
 supply(

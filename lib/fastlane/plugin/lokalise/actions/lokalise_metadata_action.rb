@@ -1,4 +1,7 @@
 require 'net/http'
+require 'fastlane_core/languages'
+require 'supply'
+
 
 module Fastlane
   module Actions
@@ -391,120 +394,138 @@ module Fastlane
 
 
       def self.itunes_connect_languages()
-        return [
-          "cs",
-          "da",
-          "de-DE",
-          "el",
-          "en-AU",
-          "en-CA",
-          "en-GB",
-          "en-US",
-          "es-MX",
-          "es-ES",
-          "fi",
-          "fr-FR",
-          "fr-CA",
-          "id",
-          "it",
-          "ja",
-          "ko",
-          "ms",
-          "nl-NL",
-          "no",
-          "pt-BR",
-          "pt-PT",
-          "ru",
-          "sv",
-          "th",
-          "tr",
-          "vi",
-          "zh-Hans",
-          "zh-Hant"
-        ]
+        if defined?(FastlaneCore::Languages::ALL_LANGUAGES)
+          return FastlaneCore::Languages::ALL_LANGUAGES
+        else
+          return [
+            "ca",
+            "cs",
+            "da",
+            "de-DE",
+            "el",
+            "en-AU",
+            "en-CA",
+            "en-GB",
+            "en-US",
+            "es-MX",
+            "es-ES",
+            "fi",
+            "fr-FR",
+            "fr-CA",
+            "hi",
+            "hr",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "ms",
+            "nl-NL",
+            "no",
+            "pl",
+            "pt-BR",
+            "pt-PT",
+            "ro",
+            "ru",
+            "sk",
+            "sv",
+            "th",
+            "tr",
+            "uk",
+            "vi",
+            "zh-Hans",
+            "zh-Hant"
+          ]
+        end
       end
 
 
       def self.google_play_languages()
-        return [
-          'af',
-          'am',
-          'ar',
-          'hy',
-          'az-AZ',
-          'eu-ES',
-          'be',
-          'bn-BD',
-          'bg',
-          'my',
-          'ca',
-          'zh-CN',
-          'zh-TW',
-          'zh-HK',
-          'hr',
-          'cs',
-          'da',
-          'nl-NL',
-          'en-AU',
-          'en-CA',
-          'en-IN',
-          'en-SG',
-          'en-ZA',
-          'en-GB',
-          'en-US',
-          'et-EE',
-          'fil',
-          'fi',
-          'fr-CA',
-          'fr-FR',
-          'gl-ES',
-          'ka-GE',
-          'de-DE',
-          'el-GR',
-          'he',
-          'hi-IN',
-          'hu',
-          'is-IS',
-          'id',
-          'it-IT',
-          'ja',
-          'kn-IN',
-          'km-KH',
-          'ko',
-          'ky',
-          'lo',
-          'lv-LV',
-          'lt-LT',
-          'mk-MK',
-          'ms',
-          'ml-IN',
-          'mr',
-          'mn-MN',
-          'ne-NP',
-          'no',
-          'fa',
-          'pl',
-          'pt-BR',
-          'pt-PT',
-          'ro',
-          'ru-RU',
-          'sr',
-          'si',
-          'sk',
-          'sl-SI',
-          'es-419',
-          'es-ES',
-          'es-US',
-          'sw',
-          'sv-SE',
-          'ta-IN',
-          'te-IN',
-          'th',
-          'tr',
-          'uk',
-          'vi',
-          'zu'
-        ]
+        if defined?(Supply::Languages::ALL_LANGUAGES)
+          return Supply::Languages::ALL_LANGUAGES
+        else
+          return [
+            'af',
+            'am',
+            'ar',
+            'az_AZ',
+            'be',
+            'bg',
+            'bn-BD',
+            'ca',
+            'cs_CZ',
+            'da_DK',
+            'de_DE',
+            'el_GR',
+            'en_AU',
+            'en_CA',
+            'en_GB',
+            'en_IN',
+            'en_SG',
+            'en_US',
+            'en_ZA',
+            'es_419',
+            'es_ES',
+            'es_US',
+            'et',
+            'eu_ES',
+            'fa',
+            'fi_FI',
+            'fil',
+            'fr_CA',
+            'fr_FR',
+            'gl_ES',
+            'hi_IN',
+            'hr',
+            'hu_HU',
+            'hy_AM',
+            'id',
+            'is_IS',
+            'it_IT',
+            'iw_IL',
+            'ja_JP',
+            'ka_GE',
+            'km_KH',
+            'kn_IN',
+            'ko_KR',
+            'ky_KG',
+            'lo_LA',
+            'lt',
+            'lv',
+            'mk_MK',
+            'ml_IN',
+            'mn_MN',
+            'mr_IN',
+            'ms',
+            'ms_MY',
+            'my_MM',
+            'ne_NP',
+            'nl_NL',
+            'no_NO',
+            'pl_PL',
+            'pt_BR',
+            'pt_PT',
+            'rm',
+            'ro',
+            'ru_RU',
+            'si_LK',
+            'sk',
+            'sl',
+            'sr',
+            'sv_SE',
+            'sw',
+            'ta_IN',
+            'te_IN',
+            'th',
+            'tr_TR',
+            'uk',
+            'vi',
+            'zh_CN',
+            'zh_TW',
+            'zh_HK',
+            'zu'
+          ]
+        end
       end
 
 
@@ -513,64 +534,64 @@ module Fastlane
         when "ios"
           if for_lokalise
             name =  name.gsub("-","_")
-            name = "en" if name == "en_US"
             name = "de" if name == "de_DE"
+            name = "en" if name == "en_US"
             name = "es" if name == "es_ES"
             name = "fr" if name == "fr_FR"
           else 
             name = name.gsub("_","-")
-            name = "en-US" if name == "en"
             name = "de-DE" if name == "de"
+            name = "en-US" if name == "en"
             name = "es-ES" if name == "es"
             name = "fr-FR" if name == "fr"
           end
         when "android"
           if for_lokalise
             name =  name.gsub("-","_")
-            name = "tr" if name == "tr_TR"
-            name = "hy" if name == "hy_AM"
-            name = "my" if name == "my_MM"
-            name = "ms" if name == "ms_MY"
             name = "cs" if name == "cs_CZ"
             name = "da" if name == "da_DK"
             name = "et_EE" if name == "et"
             name = "fi" if name == "fi_FI"
             name = "he" if name == "iw_IL"
             name = "hu" if name == "hu_HU"
+            name = "hy" if name == "hy_AM"
             name = "ja" if name == "ja_JP"
             name = "ko" if name == "ko_KR"
             name = "ky" if name == "ky_KG"
-            name = "lo" if name == "lo_LA"
-            name = "lv_LV" if name == "lv"
             name = "lt_LT" if name == "lt"
+            name = "lv_LV" if name == "lv"
+            name = "lo" if name == "lo_LA"
             name = "mr" if name == "mr_IN"
+            name = "ms" if name == "ms_MY"
+            name = "my" if name == "my_MM"
             name = "no" if name == "no_NO"
             name = "pl" if name == "pl_PL"
             name = "si" if name == "si_LK"
             name = "sl_SI" if name == "sl"
+            name = "tr" if name == "tr_TR"
           else 
             name = name.gsub("_","-")
-            name = "tr-TR" if name == "tr"
-            name = "hy-AM" if name == "hy"
-            name = "my-MM" if name == "my"
-            name = "ms-MY" if name == "ms"
             name = "cs-CZ" if name == "cs"
             name = "da-DK" if name == "da"
             name = "et" if name == "et-EE"
             name = "fi-FI" if name == "fi"
             name = "iw-IL" if name == "he"
             name = "hu-HU" if name == "hu"
+            name = "hy-AM" if name == "hy"
             name = "ja-JP" if name == "ja"
             name = "ko-KR" if name == "ko"
             name = "ky-KG" if name == "ky"
-            name = "lo-LA" if name == "lo"
             name = "lv" if name == "lv-LV"
             name = "lt" if name == "lt-LT"
+            name = "lo-LA" if name == "lo"
             name = "mr-IN" if name == "mr"
+            name = "ms-MY" if name == "ms"
+            name = "my-MM" if name == "my"
             name = "no-NO" if name == "no"
             name = "pl-PL" if name == "pl"
             name = "si-LK" if name == "si"
             name = "sl" if name == "sl-SI"
+            name = "tr-TR" if name == "tr"
           end
         end
         return name
