@@ -453,14 +453,14 @@ module Fastlane
           language_map = itunes_to_lokalise_language_map()
         end
         if for_lokalise
-          if defined?(language_map[language])
+          if language_map.key?(language)
             return language_map[language]
           else
             return language.gsub("-", "_")
           end
         else
           language_map = language_map.invert
-          if defined?(language_map[language])
+          if language_map.key?(language)
             return language_map[language]
           else
             return language.gsub("_", "-")
