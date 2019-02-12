@@ -273,7 +273,7 @@ module Fastlane
         if @params.has_key?(:metadata_path)
           metadata_path = @params[:metadata_path]
         else
-          metadata_path = @params[:metadata_path]
+          metadata_path = default_metadata_path
         end
         complete_metadata = {}
         available_languages.each { |iso_code|
