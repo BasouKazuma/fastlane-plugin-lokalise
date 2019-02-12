@@ -446,24 +446,24 @@ module Fastlane
       end
 
 
-      def self.fix_language_name(name, for_lokalise = false)
+      def self.fix_language_name(language, for_lokalise = false)
         if @params[:platform] == "android"
           language_map = googleplay_to_lokalise_language_map()
         else
           language_map = itunes_to_lokalise_language_map()
         end
         if for_lokalise
-          if defined?(language_map[name])
-            return language_map[name]
+          if defined?(language_map[language])
+            return language_map[language]
           else
-            return name.gsub("-", "_")
+            return language.gsub("-", "_")
           end
         else
           language_map = language_map.invert
-          if defined?(language_map[name])
-            return language_map[name]
+          if defined?(language_map[language])
+            return language_map[language]
           else
-            return name.gsub("_", "-")
+            return language.gsub("_", "-")
           end
         end
       end
