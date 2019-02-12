@@ -12,9 +12,6 @@ module Fastlane
         case @params[:platform]
         when "ios"
             case @params[:action]
-            when "update_itunes"
-                metadata = get_metadata_from_lokalise()
-                run_deliver_action(metadata)
             when "download_from_lokalise"
                 metadata = get_metadata_from_lokalise()
                 write_lokalise_translations_to_itunes_metadata(metadata)
@@ -35,12 +32,6 @@ module Fastlane
             end
         when "android"
             case @params[:action]
-            when "update_googleplay"
-                release_number = params[:release_number]
-                UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
-                metadata = get_metadata_from_lokalise()
-                write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
-                run_supply_action(params[:validate_only])
             when "download_from_lokalise"
                 release_number = params[:release_number]
                 UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
@@ -116,35 +107,6 @@ module Fastlane
       end
 
 
-      # Deprecated: A fastlane user should just call the deliver command in their own Fastfile
-      def self.run_deliver_action(metadata)
-        config = FastlaneCore::Configuration.create(Actions::DeliverAction.available_options, {})
-        config.load_configuration_file("Deliverfile")
-        config[:metadata_path] = "./fastlane/no_metadata"
-        config[:screenshots_path] = "./fastlane/no_screenshot"
-        config[:skip_screenshots] = true
-        config[:run_precheck_before_submit] = false
-        config[:skip_binary_upload] = true
-        config[:skip_app_version_update] = true
-        config[:force] = true
-
-        metadata_key_file_itunes().each { |key, parameter|
-          final_translations = {}
-
-          metadata.each { |lang, translations|
-            if translations.empty? == false
-              translation = translations[key]
-              final_translations[lang] = translation if translation != nil && translation.empty? == false
-            end
-          }
-
-          config[parameter.to_sym] = final_translations
-        }
-
-        Actions::DeliverAction.run(config)
-      end
-
-
       def self.write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
         translations = {}
         metadata_key_file_googleplay().each { |key, parameter|
@@ -171,18 +133,6 @@ module Fastlane
             File.write(path, text)
           }
         }
-      end
-
-
-      # Deprecated: A fastlane user should just call the suppy command in their own Fastfile
-      def self.run_supply_action(validate_only)
-        config = FastlaneCore::Configuration.create(Actions::SupplyAction.available_options, {})
-        config[:skip_upload_apk] = true
-        config[:skip_upload_aab] = true
-        config[:skip_upload_screenshots] = true
-        config[:skip_upload_images] = true
-        config[:validate_only] = validate_only
-        Actions::SupplyAction.run(config)
       end
 
 
@@ -521,24 +471,16 @@ module Fastlane
                                          UI.user_error! "Override translation should be true or false" unless [true, false].include? value
                                        end),
           FastlaneCore::ConfigItem.new(key: :action,
-                                       description: "Action to perform (update_itunes, update_googleplay, download_from_lokalise, upload_to_lokalise)",
+                                       description: "Action to perform (download_from_lokalise, upload_to_lokalise)",
                                        optional: false,
                                        is_string: true,
                                        verify_block: proc do |value|
-                                         UI.user_error! "Action should be one of the following: update_itunes, update_googleplay, download_from_lokalise, upload_to_lokalise" unless ["update_itunes", "update_googleplay", "download_from_lokalise", "upload_to_lokalise"].include? value
+                                         UI.user_error! "Action should be one of the following: download_from_lokalise, upload_to_lokalise" unless ["download_from_lokalise", "upload_to_lokalise"].include? value
                                        end),
           FastlaneCore::ConfigItem.new(key: :release_number,
-                                      description: "Release number is required to update google play",
+                                      description: "Release number is required for Android actions",
                                       optional: true,
                                       is_string: false),
-          FastlaneCore::ConfigItem.new(key: :validate_only,
-                                      description: "Only validate the metadata (works with only update_googleplay action)",
-                                      optional: true,
-                                      is_string: false,
-                                      default_value: false,
-                                      verify_block: proc do |value|
-                                        UI.user_error! "Validate only should be true or false" unless [true, false].include? value
-                                      end),
         ]
       end
 
