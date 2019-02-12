@@ -270,7 +270,7 @@ module Fastlane
           available_languages = google_play_languages
           default_metadata_path = "fastlane/metadata/android/"
         end
-        if @params.has_key?(:metadata_path)
+        if @params[:metadata_path]
           metadata_path = @params[:metadata_path]
         else
           metadata_path = default_metadata_path
