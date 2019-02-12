@@ -409,72 +409,63 @@ module Fastlane
       end
 
 
+      def self.itunes_to_lokalise_language_map()
+        return {
+          "de-DE" => "de",
+          "en-US" => "en",
+          "es-ES" => "es",
+          "fr-FR" => "fr"
+        }
+      end
+
+
+      def self.googleplay_to_lokalise_language_map()
+        return {
+          "cs-CZ" => "cs",
+          "da-DK" => "da",
+          "et" => "et_EE",
+          "fi-FI" => "fi",
+          "iw-IL" => "he",
+          "hu-HU" => "hu",
+          "hy-AM" => "hy",
+          "ja-JP" => "ja",
+          "ko-KR" => "ko",
+          "ky-KG" => "ky",
+          "lt" => "lt_LT",
+          "lv" => "lv_LV",
+          "lo-LA" => "lo",
+          "mr-IN" => "mr",
+          "ms-MY" => "ms",
+          "my-MM" => "my",
+          "no-NO" => "no",
+          "pl-PL" => "pl",
+          "si-LK" => "si",
+          "sl" => "sl_SI",
+          "tr-TR" => "tr"
+        }
+      end
+
+
       def self.fix_language_name(name, for_lokalise = false)
-        case @params[:platform]
-        when "ios"
-          if for_lokalise
-            name =  name.gsub("-","_")
-            name = "de" if name == "de_DE"
-            name = "en" if name == "en_US"
-            name = "es" if name == "es_ES"
-            name = "fr" if name == "fr_FR"
-          else 
-            name = name.gsub("_","-")
-            name = "de-DE" if name == "de"
-            name = "en-US" if name == "en"
-            name = "es-ES" if name == "es"
-            name = "fr-FR" if name == "fr"
+        if @params[:platform] == "android"
+          language_map = googleplay_to_lokalise_language_map()
+        else
+          language_map = itunes_to_lokalise_language_map()
+        end
+        if for_lokalise
+          if defined?(language_map[name])
+            return language_map[name]
+          else
+            return name.gsub("-", "_")
           end
-        when "android"
-          if for_lokalise
-            name =  name.gsub("-","_")
-            name = "cs" if name == "cs_CZ"
-            name = "da" if name == "da_DK"
-            name = "et_EE" if name == "et"
-            name = "fi" if name == "fi_FI"
-            name = "he" if name == "iw_IL"
-            name = "hu" if name == "hu_HU"
-            name = "hy" if name == "hy_AM"
-            name = "ja" if name == "ja_JP"
-            name = "ko" if name == "ko_KR"
-            name = "ky" if name == "ky_KG"
-            name = "lt_LT" if name == "lt"
-            name = "lv_LV" if name == "lv"
-            name = "lo" if name == "lo_LA"
-            name = "mr" if name == "mr_IN"
-            name = "ms" if name == "ms_MY"
-            name = "my" if name == "my_MM"
-            name = "no" if name == "no_NO"
-            name = "pl" if name == "pl_PL"
-            name = "si" if name == "si_LK"
-            name = "sl_SI" if name == "sl"
-            name = "tr" if name == "tr_TR"
-          else 
-            name = name.gsub("_","-")
-            name = "cs-CZ" if name == "cs"
-            name = "da-DK" if name == "da"
-            name = "et" if name == "et-EE"
-            name = "fi-FI" if name == "fi"
-            name = "iw-IL" if name == "he"
-            name = "hu-HU" if name == "hu"
-            name = "hy-AM" if name == "hy"
-            name = "ja-JP" if name == "ja"
-            name = "ko-KR" if name == "ko"
-            name = "ky-KG" if name == "ky"
-            name = "lv" if name == "lv-LV"
-            name = "lt" if name == "lt-LT"
-            name = "lo-LA" if name == "lo"
-            name = "mr-IN" if name == "mr"
-            name = "ms-MY" if name == "ms"
-            name = "my-MM" if name == "my"
-            name = "no-NO" if name == "no"
-            name = "pl-PL" if name == "pl"
-            name = "si-LK" if name == "si"
-            name = "sl" if name == "sl-SI"
-            name = "tr-TR" if name == "tr"
+        else
+          language_map = language_map.invert
+          if defined?(language_map[name])
+            return language_map[name]
+          else
+            return name.gsub("_", "-")
           end
         end
-        return name
       end
 
 
