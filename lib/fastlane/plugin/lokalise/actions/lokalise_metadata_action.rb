@@ -1,6 +1,4 @@
 require 'net/http'
-require 'fastlane_core/languages'
-require 'supply'
 
 
 module Fastlane
@@ -399,7 +397,11 @@ module Fastlane
 
 
       def self.google_play_languages()
-        return Supply::Languages::ALL_LANGUAGES
+        languages = Supply::Languages::ALL_LANGUAGES
+        languages.each do |lang|
+            lang.gsub!("_", '-')
+        end
+        return languages
       end
 
 
@@ -547,7 +549,7 @@ module Fastlane
 
 
       def self.authors
-        ["Fedya-L"]
+        ["Fedya-L", "BasouKazuma"]
       end
 
 
