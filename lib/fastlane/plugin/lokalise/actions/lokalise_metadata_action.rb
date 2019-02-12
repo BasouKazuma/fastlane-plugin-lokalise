@@ -392,7 +392,11 @@ module Fastlane
 
 
       def self.itunes_connect_languages()
-        return FastlaneCore::Languages::ALL_LANGUAGES
+        languages = FastlaneCore::Languages::ALL_LANGUAGES
+        languages.each do |lang|
+            lang.gsub!("_", '-')
+        end
+        return languages
       end
 
 
