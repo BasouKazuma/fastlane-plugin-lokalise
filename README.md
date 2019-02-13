@@ -108,9 +108,9 @@ https://docs.fastlane.tools/actions/supply/
 desc "Downloads metadata from Google Play"
 lane :download_googleplay_metadata do
     # Replace metadata_path if not in the default location
-    metadata_path = "fastlane/metadata/android"
+    metadata_path = "metadata/android"
     sh("rm -rf #{metadata_path}")
-    sh("fastlane supply init")
+    sh("pushd ..; fastlane supply init; popd")
 end
 ```
 
