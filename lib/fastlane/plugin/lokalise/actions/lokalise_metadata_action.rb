@@ -34,7 +34,7 @@ module Fastlane
             case @params[:action]
             when "download_from_lokalise"
                 release_number = params[:release_number]
-                UI.user_error! "Release number is required when using `update_googleplay` action (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
+                UI.user_error! "Release number is required for Android (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
                 metadata = get_metadata_from_lokalise()
                 write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
             when "upload_to_lokalise"
@@ -108,29 +108,27 @@ module Fastlane
 
 
       def self.write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
-        translations = {}
         metadata_key_file_googleplay().each { |key, parameter|
           final_translations = {}
           metadata.each { |lang, translations|
             if translations.empty? == false
               translation = translations[key]
               final_translations[lang] = translation if translation != nil && translation.empty? == false
-            end 
-          }
-          translations[parameter.to_sym] = final_translations
-        }
-        FileUtils.rm_rf(Dir['fastlane/metadata/android/*'])
-        translations.each { |key, parameter|
-          parameter.each { |lang, text|
-            path = "fastlane/metadata/android/#{lang}/#{key}.txt"
-            if "#{key}" ==  "changelogs"
-              path = "fastlane/metadata/android/#{lang}/changelogs/#{release_number}.txt"
+              metadata_path = get_metadata_path()
+              if "#{parameter}" ==  "changelogs"
+                path = File.join('.', metadata_path, lang, parameter)
+                filename = "#{release_number}.txt"
+              else
+                path = File.join('.', metadata_path, lang)
+                filename = "#{parameter}.txt"
+              end
+              output_file = File.join(path, filename)
+              FileUtils.mkdir_p(path) unless File.exist?(path)
+              puts "Updating '#{output_file}'..."
+              File.open(output_file, 'wb') do |file|
+                file.write(final_translations[lang])
+              end
             end
-            dirname = File.dirname(path)
-            unless File.directory?(dirname)
-              FileUtils.mkdir_p(dirname)
-            end
-            File.write(path, text)
           }
         }
       end
@@ -211,20 +209,28 @@ module Fastlane
       end
 
 
+      def self.get_metadata_path()
+        if @params[:metadata_path]
+          metadata_path = @params[:metadata_path]
+        else
+          case @params[:platform]
+          when "android"
+            metadata_path = "fastlane/metadata/android/"
+          else
+            metadata_path = "fastlane/metadata/"
+          end
+        end
+      end
+
+
       def self.get_metadata()
         case @params[:platform]
         when "ios"
           available_languages = itunes_connect_languages
-          default_metadata_path = "fastlane/metadata/"
         when "android"
           available_languages = google_play_languages
-          default_metadata_path = "fastlane/metadata/android/"
         end
-        if @params[:metadata_path]
-          metadata_path = @params[:metadata_path]
-        else
-          metadata_path = default_metadata_path
-        end
+        metadata_path = get_metadata_path()
         complete_metadata = {}
         available_languages.each { |iso_code|
           language_directory = File.join(metadata_path, iso_code)
@@ -373,6 +379,7 @@ module Fastlane
         return {
           "cs-CZ" => "cs",
           "da-DK" => "da",
+          "en-US" => "en",
           "et" => "et_EE",
           "fi-FI" => "fi",
           "iw-IL" => "he",
