@@ -120,7 +120,7 @@ module Fastlane
                 path = File.join(metadata_path, lang, parameter)
                 filename = "#{release_number}.txt"
               else
-                path = File.join('.', metadata_path, lang)
+                path = File.join(metadata_path, lang)
                 filename = "#{parameter}.txt"
               end
               output_file = File.join(path, filename)
@@ -221,6 +221,7 @@ module Fastlane
             metadata_path = "fastlane/metadata/"
           end
         end
+        return metadata_path
       end
 
 
