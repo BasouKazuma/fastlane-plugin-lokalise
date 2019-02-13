@@ -93,7 +93,8 @@ module Fastlane
             if translations.empty? == false
               translation = translations[key]
               final_translations[lang] = translation if translation != nil && translation.empty? == false
-              path = File.join('.', 'fastlane', 'metadata', lang)
+              metadata_path = get_metadata_path()
+              path = File.join(metadata_path, lang)
               filename = "#{parameter}.txt"
               output_file = File.join(path, filename)
               FileUtils.mkdir_p(path) unless File.exist?(path)
@@ -116,7 +117,7 @@ module Fastlane
               final_translations[lang] = translation if translation != nil && translation.empty? == false
               metadata_path = get_metadata_path()
               if "#{parameter}" ==  "changelogs"
-                path = File.join('.', metadata_path, lang, parameter)
+                path = File.join(metadata_path, lang, parameter)
                 filename = "#{release_number}.txt"
               else
                 path = File.join('.', metadata_path, lang)
