@@ -369,10 +369,9 @@ module Fastlane
 
       def self.itunes_to_lokalise_language_map()
         return {
-          "de-DE" => "de",
-          "en-US" => "en",
-          "es-ES" => "es",
-          "fr-FR" => "fr"
+          "hi" => "hi_IN",
+          "zh-Hans" => "zh_CN",
+          "zh-Hant" => "zh_TW"
         }
       end
 
@@ -381,8 +380,6 @@ module Fastlane
         return {
           "cs-CZ" => "cs",
           "da-DK" => "da",
-          "en-US" => "en",
-          "et" => "et_EE",
           "fi-FI" => "fi",
           "iw-IL" => "he",
           "hu-HU" => "hu",
@@ -390,14 +387,10 @@ module Fastlane
           "ja-JP" => "ja",
           "ko-KR" => "ko",
           "ky-KG" => "ky",
-          "lt" => "lt_LT",
-          "lv" => "lv_LV",
           "lo-LA" => "lo",
           "mr-IN" => "mr",
-          "ms-MY" => "ms",
           "my-MM" => "my",
           "no-NO" => "no",
-          "pl-PL" => "pl",
           "si-LK" => "si",
           "sl" => "sl_SI",
           "tr-TR" => "tr"
