@@ -1,5 +1,4 @@
 require 'net/http'
-require 'rubyzip'
 require 'rubygems'
 
 module Fastlane
