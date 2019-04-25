@@ -268,7 +268,7 @@ module Fastlane
         when "ios"
           valid_keys = metadata_key_file_itunes().keys
           valid_languages = itunes_connect_languages_in_lokalise()
-          key_name = "key_ios"
+          key_name = "key"
         when "android"
           valid_keys = metadata_key_file_googleplay().keys
           valid_languages = google_play_languages_in_lokalise()
@@ -369,6 +369,8 @@ module Fastlane
 
       def self.itunes_to_lokalise_language_map()
         return {
+          "nl-NL" => "nl",
+          "en-US" => "en",
           "hi" => "hi_IN",
           "zh-Hans" => "zh_CN",
           "zh-Hant" => "zh_TW"
