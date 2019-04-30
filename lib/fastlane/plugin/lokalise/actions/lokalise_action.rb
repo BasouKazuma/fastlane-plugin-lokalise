@@ -14,6 +14,7 @@ module Fastlane
         include_comments = params[:include_comments] ? 1 : 0
         use_original = params[:use_original] ? 1 : 0
         replace_breaks = params[:replace_breaks] ? 1 : 0
+        export_sort = params[:export_sort]
 
         request_data = {
           api_token: token,
@@ -26,6 +27,7 @@ module Fastlane
           export_empty: "base",
           include_comments: include_comments,
           replace_breaks: replace_breaks,
+          export_sort: export_sort
         }
 
         languages = params[:languages]
@@ -166,6 +168,14 @@ module Fastlane
                                        verify_block: proc do |value|
                                          UI.user_error! "Use original should be true of false." unless [true, false].include?(value)
                                         end),
+            FastlaneCore::ConfigItem.new(key: :export_sort,
+                                        description: "Export key sort mode. Allowed value are first_added, last_added, last_updated, a_z, z_a",
+                                        optional: true,
+                                        is_string: true,
+                                        default_value: "first_added",
+                                        verify_block: proc do |value|
+                                          UI.user_error! "Export sort should be first_added, last_added, last_updated, a_z or z_a" unless %w[first_added last_added last_updated a_z z_a].include?(value)
+                                         end),
             FastlaneCore::ConfigItem.new(key: :tags,
                                         description: "Include only the keys tagged with a given set of tags",
                                         optional: true,
