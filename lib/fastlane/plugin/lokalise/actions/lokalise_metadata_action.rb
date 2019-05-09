@@ -284,7 +284,11 @@ module Fastlane
           if valid_languages.include?(lang)
             translations = {}
             translation_objects.each { |object|
-                key = object[key_name]
+              # The key can named differently depending on how the Lokalise Project was set up
+              key = object[key_name]
+              if !key
+                key = object['key']
+              end
               translation = object["translation"]
               if valid_keys.include?(key) && translation != nil && translation.empty? == false 
                 translations[key] = translation
@@ -306,7 +310,7 @@ module Fastlane
           hash[key] = text unless text.empty?
         rescue => exception
           raise exception
-        end        
+        end
       end
 
 
@@ -369,6 +373,8 @@ module Fastlane
 
       def self.itunes_to_lokalise_language_map()
         return {
+          "nl-NL" => "nl",
+          "en-US" => "en",
           "hi" => "hi_IN",
           "zh-Hans" => "zh_CN",
           "zh-Hant" => "zh_TW"
