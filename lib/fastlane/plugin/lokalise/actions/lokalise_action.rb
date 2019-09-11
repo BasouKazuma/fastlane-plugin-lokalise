@@ -13,6 +13,7 @@ module Fastlane
         clean_destination = params[:clean_destination]
         include_comments = params[:include_comments] ? 1 : 0
         use_original = params[:use_original] ? 1 : 0
+        additional_export_params = params[:additional_export_params]
 
         request_data = {
           api_token: token,
@@ -25,6 +26,9 @@ module Fastlane
           export_empty: "base",
           include_comments: include_comments
         }
+        if @additional_export_params.is_a?(Hash) && !additional_export_params.empty? then
+          request_data.merge( additional_export_params )
+        end
 
         languages = params[:languages]
         if languages.kind_of? Array then
@@ -163,7 +167,11 @@ module Fastlane
                                         verify_block: proc do |value|
                                           UI.user_error! "Tags should be passed as array" unless value.kind_of? Array
                                         end),
-
+          FastlaneCore::ConfigItem.new(key: :additional_export_params,
+                                       description: "Additional params for the export request body",
+                                       type: Hash,
+                                       optional: true,
+                                       default_value: {}),
         ]
       end
 

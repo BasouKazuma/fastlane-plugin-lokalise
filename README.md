@@ -33,6 +33,7 @@ Parameters:
 - `languages`. Languages to download *(must be passed as array of strings, leave empty to download all)*.
 - `include_comments`. Include comments in exported files.
 - `use_original`. Use original filenames/formats.
+- `additional_export_params`. Can pass in a Hash map of additional parameters for the export request.
 
 ### lokalise_metadata
 
