@@ -175,7 +175,7 @@ module Fastlane
                                          UI.user_error! "export_empty_as should be defined as empty, base or skip." unless ["empty", "base", "skip"].include?(value)
                                         end),
             FastlaneCore::ConfigItem.new(key: :export_sort,
-                                       description: "Define the strategy for empty translations. Possible values are: [empty, base, skip]",
+                                       description: "Define the strategy for sorting translations. Possible values are: [first_added, last_added, last_updated, a_z, z_a]",
                                        optional: true,
                                        is_string: true,
                                        default_value: "last_added",
