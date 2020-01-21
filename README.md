@@ -33,6 +33,8 @@ Parameters:
 - `languages`. Languages to download *(must be passed as array of strings, leave empty to download all)*.
 - `include_comments`. Include comments in exported files.
 - `use_original`. Use original filenames/formats.
+- `export_empty_as`. Define the strategy for empty translations.
+- `export_sort`. Define the strategy for sorting translations.
 
 ### lokalise_metadata
 
