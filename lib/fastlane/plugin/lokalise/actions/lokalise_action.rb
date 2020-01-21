@@ -13,6 +13,8 @@ module Fastlane
         clean_destination = params[:clean_destination]
         include_comments = params[:include_comments] ? 1 : 0
         use_original = params[:use_original] ? 1 : 0
+        export_empty_as = params[:export_empty_as] || 'empty'
+        export_sort = params[:export_sort] || 'last_added'
 
         request_data = {
           api_token: token,
@@ -23,7 +25,9 @@ module Fastlane
           bundle_structure: "%LANG_ISO%.lproj/Localizable.%FORMAT%",
           ota_plugin_bundle: 0,
           export_empty: "base",
-          include_comments: include_comments
+          include_comments: include_comments,
+          export_empty_as: export_empty_as,
+          export_sort: export_sort
         }
 
         languages = params[:languages]
@@ -43,7 +47,6 @@ module Fastlane
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
         response = http.request(request)
-
 
         jsonResponse = JSON.parse(response.body)
         UI.error "Bad response 🉐\n#{response.body}" unless jsonResponse.kind_of? Hash
