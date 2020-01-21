@@ -13,8 +13,8 @@ module Fastlane
         clean_destination = params[:clean_destination]
         include_comments = params[:include_comments] ? 1 : 0
         use_original = params[:use_original] ? 1 : 0
-        export_empty_as = params[:export_empty_as] || 'empty'
-        export_sort = params[:export_sort] || 'last_added'
+        export_empty_as = params[:export_empty_as]
+        export_sort = params[:export_sort]
 
         request_data = {
           api_token: token,
@@ -166,7 +166,22 @@ module Fastlane
                                         verify_block: proc do |value|
                                           UI.user_error! "Tags should be passed as array" unless value.kind_of? Array
                                         end),
-
+            FastlaneCore::ConfigItem.new(key: :export_empty_as,
+                                       description: "Define the strategy for empty translations. Possible values are: [empty, base, skip]",
+                                       optional: true,
+                                       is_string: true,
+                                       default_value: "empty",
+                                       verify_block: proc do |value|
+                                         UI.user_error! "export_empty_as should be defined as empty, base or skip." unless ["empty", "base", "skip"].include?(value)
+                                        end),
+            FastlaneCore::ConfigItem.new(key: :export_sort,
+                                       description: "Define the strategy for empty translations. Possible values are: [empty, base, skip]",
+                                       optional: true,
+                                       is_string: true,
+                                       default_value: "last_added",
+                                       verify_block: proc do |value|
+                                         UI.user_error! "export_sort should be defined as first_added, last_added, last_updated, a_z or z_a." unless ["first_added", "last_added", "last_updated", "a_z", "z_a"].include?(value)
+                                        end),
         ]
       end
 
