@@ -163,6 +163,7 @@ module Fastlane
                                         description: "Include only the keys tagged with a given set of tags",
                                         optional: true,
                                         is_string: false,
+                                        type: Array,
                                         verify_block: proc do |value|
                                           UI.user_error! "Tags should be passed as array" unless value.kind_of? Array
                                         end),
