@@ -15,6 +15,7 @@ module Fastlane
         use_original = params[:use_original] ? 1 : 0
         export_empty_as = params[:export_empty_as]
         export_sort = params[:export_sort]
+        file_strategy = params[:file_strategy]
 
         request_data = {
           api_token: token,
@@ -64,7 +65,7 @@ module Fastlane
             open("lokalisetmp/a.zip", "wb") { |file| 
               file.write(response.body)
             }
-            unzip_file("lokalisetmp/a.zip", destination, clean_destination)
+            unzip_file("lokalisetmp/a.zip", destination, clean_destination, file_strategy)
             FileUtils.remove_dir("lokalisetmp")
             UI.success "Localizations extracted to #{destination} 📗 📕 📘"
           else
@@ -80,7 +81,7 @@ module Fastlane
       end
 
 
-      def self.unzip_file(file, destination, clean_destination)
+      def self.unzip_file(file, destination, clean_destination, file_strategy)
         Zip::File.open(file) { |zip_file|
           if clean_destination then
             UI.message "Cleaning destination folder ♻️"
@@ -90,11 +91,27 @@ module Fastlane
           UI.message "Unarchiving localizations to destination 📚"
            zip_file.each { |f|
              f_path= File.join(destination, f.name)
-             FileUtils.mkdir_p(File.dirname(f_path))
-             FileUtils.rm(f_path) if File.file? f_path
-             zip_file.extract(f, f_path)
+             FileUtils.mkdir_p(File.dirname(path))
+             if file_strategy == "override" then
+               override_file(f, f_path)
+             else
+               merge_file(f, f_path)
+             end
            }
         }
+      end
+        
+      def self.override_file(file, path)
+        FileUtils.rm(path) if File.file? path
+        zip_file.extract(file, path)
+      end
+          
+      def self.merge_file(file, path)
+        if File.file? path then
+          UI.message "Merging " + path
+        else
+          zip_file.extract(file, path)
+        end
       end
 
 
@@ -174,6 +191,14 @@ module Fastlane
                                        default_value: "empty",
                                        verify_block: proc do |value|
                                          UI.user_error! "export_empty_as should be defined as empty, base or skip." unless ["empty", "base", "skip"].include?(value)
+                                        end),
+            FastlaneCore::ConfigItem.new(key: :file_strategy,
+                                       description: "Use original filenames/formats (bundle_structure parameter is ignored then)",
+                                       optional: true,
+                                       is_string: true,
+                                       default_value: "override",
+                                       verify_block: proc do |value|
+                                         UI.user_error! "Use original should be true of false." unless ["override", "merge"].include?(value)
                                         end),
             FastlaneCore::ConfigItem.new(key: :export_sort,
                                        description: "Define the strategy for sorting translations. Possible values are: [first_added, last_added, last_updated, a_z, z_a]",
