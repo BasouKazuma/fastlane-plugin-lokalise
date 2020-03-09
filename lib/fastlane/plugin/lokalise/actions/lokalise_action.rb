@@ -109,57 +109,45 @@ module Fastlane
       def self.merge_file(zip_file, file, path)
         if File.file? path then
           tempFilePath = "lokalisetmp/" + file.name
-
+          
           FileUtils.rm(tempFilePath) if File.file? tempFilePath
           FileUtils.mkdir_p(File.dirname(tempFilePath))
           zip_file.extract(file, tempFilePath)
-
-          translations = []
-
-          tempFile = File.open(tempFilePath, "r")
+          
+          translations = Hash.new
+          
           destFile = File.open(path, "r")
-
           destFile.each_line do |oldLine|
             oldKeyValue = oldLine.split('" = "')
-            hasLine = false
-
-            tempFile.each_line do |newLine|
-              newKeyValue = newLine.split('" = "')
-
-              if newKeyValue[0] == oldKeyValue[0] then
-                hasLine = true
-              end
-            
-            end
-
-            if hasLine == false then
-              translations.push(oldKeyValue)
-            end
-
+            translations[oldKeyValue[0]] = oldKeyValue[1]
           end
-          
-          tempFile.close
           destFile.close
-
-          tempFile2 = File.open(tempFilePath, "r")
-          tempFile2.each_line do |newLine|
+          
+          tempFile = File.open(tempFilePath, "r")
+          tempFile.each_line do |newLine|
             newKeyValue = newLine.split('" = "')
-            translations.push(newKeyValue)
+            translations[newKeyValue[0]] = newKeyValue[1]
           end
-
-          tempFile2.close
-
+          tempFile.close
+          
           write_file(translations, path)
-        else
+          else
           zip_file.extract(file, path)
         end
       end
-
+      
       def self.write_file(translations, path)
         FileUtils.rm(path) if File.file? path
-
+        
+        sortedTranslations = Hash[ translations.sort_by { |key, val| key.downcase } ]
+        
         File.open(path, "w+") do |file|
-          translations.each { |translation| file.write(translation.join('" = "')) }
+          sortedTranslations.each { |key, value|
+            leftSide = key
+            rightSide = value
+            line = "#{leftSide}\" = \"#{rightSide}"
+            file.write(line)
+          }
         end
       end
 
