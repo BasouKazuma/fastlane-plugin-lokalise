@@ -91,29 +91,77 @@ module Fastlane
           UI.message "Unarchiving localizations to destination 📚"
            zip_file.each { |f|
              f_path= File.join(destination, f.name)
-             FileUtils.mkdir_p(File.dirname(path))
+             FileUtils.mkdir_p(File.dirname(f_path))
              if file_strategy == "override" then
-               override_file(f, f_path)
+               override_file(zip_file, f, f_path)
              else
-               merge_file(f, f_path)
+               merge_file(zip_file, f, f_path)
              end
            }
         }
       end
         
-      def self.override_file(file, path)
+      def self.override_file(zip_file, file, path)
         FileUtils.rm(path) if File.file? path
         zip_file.extract(file, path)
       end
           
-      def self.merge_file(file, path)
+      def self.merge_file(zip_file, file, path)
         if File.file? path then
-          UI.message "Merging " + path
+          tempFilePath = "lokalisetmp/" + file.name
+
+          FileUtils.rm(tempFilePath) if File.file? tempFilePath
+          FileUtils.mkdir_p(File.dirname(tempFilePath))
+          zip_file.extract(file, tempFilePath)
+
+          translations = []
+
+          tempFile = File.open(tempFilePath, "r")
+          destFile = File.open(path, "r")
+
+          destFile.each_line do |oldLine|
+            oldKeyValue = oldLine.split('" = "')
+            hasLine = false
+
+            tempFile.each_line do |newLine|
+              newKeyValue = newLine.split('" = "')
+
+              if newKeyValue[0] == oldKeyValue[0] then
+                hasLine = true
+              end
+            
+            end
+
+            if hasLine == false then
+              translations.push(oldKeyValue)
+            end
+
+          end
+          
+          tempFile.close
+          destFile.close
+
+          tempFile2 = File.open(tempFilePath, "r")
+          tempFile2.each_line do |newLine|
+            newKeyValue = newLine.split('" = "')
+            translations.push(newKeyValue)
+          end
+
+          tempFile2.close
+
+          write_file(translations, path)
         else
           zip_file.extract(file, path)
         end
       end
 
+      def self.write_file(translations, path)
+        FileUtils.rm(path) if File.file? path
+
+        File.open(path, "w+") do |file|
+          translations.each { |translation| file.write(translation.join('" = "')) }
+        end
+      end
 
       #####################################################
       # @!group Documentation
