@@ -94,7 +94,7 @@ module Fastlane
              FileUtils.mkdir_p(File.dirname(f_path))
              if file_strategy == "override" then
                override_file(zip_file, f, f_path)
-             else if file_strategy == "merge"
+             elsif file_strategy == "merge" then
                merge_file(zip_file, f, f_path)
              else 
                update_file(zip_file, f, f_path)
