@@ -94,8 +94,10 @@ module Fastlane
              FileUtils.mkdir_p(File.dirname(f_path))
              if file_strategy == "override" then
                override_file(zip_file, f, f_path)
-             else
+             else if file_strategy == "merge"
                merge_file(zip_file, f, f_path)
+             else 
+               update_file(zip_file, f, f_path)
              end
            }
         }
@@ -136,6 +138,36 @@ module Fastlane
         end
       end
       
+      def self.update_file(zip_file, file, path)
+        if File.file? path then
+          tempFilePath = "lokalisetmp/" + file.name
+          
+          FileUtils.rm(tempFilePath) if File.file? tempFilePath
+          FileUtils.mkdir_p(File.dirname(tempFilePath))
+          zip_file.extract(file, tempFilePath)
+          
+          translations = Hash.new
+          
+          destFile = File.open(path, "r")
+          destFile.each_line do |oldLine|
+            oldKeyValue = oldLine.split('" = "')
+            translations[oldKeyValue[0]] = oldKeyValue[1]
+          end
+          destFile.close
+          
+          tempFile = File.open(tempFilePath, "r")
+          tempFile.each_line do |newLine|
+            newKeyValue = newLine.split('" = "')
+            translations[newKeyValue[0]] = newKeyValue[1] unless translations[newKeyValue[0]].nil?
+          end
+          tempFile.close
+          
+          write_file(translations, path)
+          else
+          zip_file.extract(file, path)
+        end
+      end
+        
       def self.write_file(translations, path)
         FileUtils.rm(path) if File.file? path
         
@@ -234,7 +266,7 @@ module Fastlane
                                        is_string: true,
                                        default_value: "override",
                                        verify_block: proc do |value|
-                                         UI.user_error! "Use original should be true of false." unless ["override", "merge"].include?(value)
+                                         UI.user_error! "File strategy should be override, merge or update." unless ["override", "merge", "update"].include?(value)
                                         end),
             FastlaneCore::ConfigItem.new(key: :export_sort,
                                        description: "Define the strategy for sorting translations. Possible values are: [first_added, last_added, last_updated, a_z, z_a]",
