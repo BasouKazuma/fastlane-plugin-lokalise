@@ -92,7 +92,7 @@ module Fastlane
            zip_file.each { |f|
              f_path= File.join(destination, f.name)
              FileUtils.mkdir_p(File.dirname(f_path))
-             if file_strategy == "override" then
+             if (file_strategy == "override") || !f_path.end_with?(".strings") then
                override_file(zip_file, f, f_path)
              elsif file_strategy == "merge" then
                merge_file(zip_file, f, f_path)
