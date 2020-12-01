@@ -11,20 +11,18 @@ module Fastlane
         project_identifier = params[:project_identifier]
         destination = params[:destination]
         clean_destination = params[:clean_destination]
-        include_comments = params[:include_comments] ? 1 : 0
-        use_original = params[:use_original] ? 1 : 0
+        include_comments = params[:include_comments] ? true : false
+        use_original = params[:use_original] ? true : false
         export_empty_as = params[:export_empty_as]
         export_sort = params[:export_sort]
         file_strategy = params[:file_strategy]
 
         request_data = {
-          api_token: token,
-          id: project_identifier,
+          format: "strings",
           type: "strings",
           use_original: use_original,
           bundle_filename: "Localization.zip",
           bundle_structure: "%LANG_ISO%.lproj/Localizable.%FORMAT%",
-          ota_plugin_bundle: 0,
           export_empty: "base",
           include_comments: include_comments,
           export_empty_as: export_empty_as,
@@ -33,7 +31,7 @@ module Fastlane
 
         languages = params[:languages]
         if languages.kind_of? Array then
-          request_data["langs"] = languages.to_json
+          request_data["filter_langs"] = languages
         end
 
         tags = params[:tags]
@@ -41,9 +39,9 @@ module Fastlane
           request_data["include_tags"] = tags.to_json
         end
 
-        uri = URI("https://api.lokalise.co/api/project/export")
-        request = Net::HTTP::Post.new(uri)
-        request.set_form_data(request_data)
+        uri = URI("https://api.lokalise.co/api2/projects/#{project_identifier}/files/download")
+        request = Net::HTTP::Post.new(uri, {'content-type' => 'application/json', 'x-api-token' => "#{token}"})
+        request.body = request_data.to_json
 
         http = Net::HTTP.new(uri.host, uri.port)
         http.use_ssl = true
@@ -51,10 +49,11 @@ module Fastlane
 
         jsonResponse = JSON.parse(response.body)
         UI.error "Bad response 🉐\n#{response.body}" unless jsonResponse.kind_of? Hash
-        if jsonResponse["response"]["status"] == "success" && jsonResponse["bundle"]["file"].kind_of?(String)  then
+
+        if response.is_a?(Net::HTTPSuccess) && jsonResponse["bundle_url"].kind_of?(String) then
           UI.message "Downloading localizations archive 📦"
           FileUtils.mkdir_p("lokalisetmp")
-          fileURL = jsonResponse["bundle"]["full_file"]
+          fileURL = jsonResponse["bundle_url"]
           uri = URI(fileURL)
           http = Net::HTTP.new(uri.host, uri.port)
           http.use_ssl = true
@@ -71,9 +70,9 @@ module Fastlane
           else
             UI.error "Response did not include ZIP"
           end
-        elsif jsonResponse["response"]["status"] == "error"
-          code = jsonResponse["response"]["code"]
-          message = jsonResponse["response"]["message"]
+        elsif !response.is_a?(Net::HTTPSuccess)
+          code = reponse.code
+          message = response.message
           UI.error "Response error code #{code} (#{message}) 📟"
         else
           UI.error "Bad response 🉐\n#{jsonResponse}"
