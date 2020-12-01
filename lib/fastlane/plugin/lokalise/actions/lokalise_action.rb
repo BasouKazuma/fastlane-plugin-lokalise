@@ -20,10 +20,9 @@ module Fastlane
         request_data = {
           format: "strings",
           type: "strings",
-          use_original: use_original,
+          original_filenames: use_original,
           bundle_filename: "Localization.zip",
           bundle_structure: "%LANG_ISO%.lproj/Localizable.%FORMAT%",
-          export_empty: "base",
           include_comments: include_comments,
           export_empty_as: export_empty_as,
           export_sort: export_sort
