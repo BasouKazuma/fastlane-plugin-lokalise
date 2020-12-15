@@ -16,6 +16,7 @@ module Fastlane
         export_empty_as = params[:export_empty_as]
         export_sort = params[:export_sort]
         file_strategy = params[:file_strategy]
+        escape_percent = params[:escape_percent]
 
         request_data = {
           format: "strings",
@@ -25,7 +26,8 @@ module Fastlane
           bundle_structure: "%LANG_ISO%.lproj/Localizable.%FORMAT%",
           include_comments: include_comments,
           export_empty_as: export_empty_as,
-          export_sort: export_sort
+          export_sort: export_sort,
+          escape_percent: escape_percent
         }
 
         languages = params[:languages]
@@ -274,6 +276,14 @@ module Fastlane
                                        verify_block: proc do |value|
                                          UI.user_error! "export_sort should be defined as first_added, last_added, last_updated, a_z or z_a." unless ["first_added", "last_added", "last_updated", "a_z", "z_a"].include?(value)
                                         end),
+            FastlaneCore::ConfigItem.new(key: :escape_percent,
+                                       description: "Only works for printf placeholder format. When enabled, all universal percent placeholders \"[%]\" will be always exported as \"%%\"",
+                                       optional: true,
+                                       is_string: false,
+                                       default_value: false,
+                                       verify_block: proc do |value|
+                                         UI.user_error! "escape_percent should be true or false" unless [true, false].include? value
+                                        end)
         ]
       end
 
