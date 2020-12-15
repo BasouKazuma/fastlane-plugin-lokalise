@@ -25,7 +25,8 @@ module Fastlane
           bundle_structure: "%LANG_ISO%.lproj/Localizable.%FORMAT%",
           include_comments: include_comments,
           export_empty_as: export_empty_as,
-          export_sort: export_sort
+          export_sort: export_sort,
+          escape_percent: true
         }
 
         languages = params[:languages]
