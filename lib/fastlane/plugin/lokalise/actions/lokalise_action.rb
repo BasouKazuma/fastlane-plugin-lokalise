@@ -72,7 +72,7 @@ module Fastlane
             UI.error "Response did not include ZIP"
           end
         elsif !response.is_a?(Net::HTTPSuccess)
-          code = reponse.code
+          code = response.code
           message = response.message
           UI.error "Response error code #{code} (#{message}) 📟"
         else
