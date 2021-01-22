@@ -1,5 +1,5 @@
 module Fastlane
   module Lokalise
-    VERSION = "2.0.13"
+    VERSION = "2.0.14"
   end
 end
