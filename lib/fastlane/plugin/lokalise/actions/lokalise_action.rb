@@ -37,7 +37,7 @@ module Fastlane
 
         tags = params[:tags]
         if tags.kind_of? Array then
-          request_data["include_tags"] = tags.to_json
+          request_data["include_tags"] = tags
         end
 
         uri = URI("https://api.lokalise.co/api2/projects/#{project_identifier}/files/download")
