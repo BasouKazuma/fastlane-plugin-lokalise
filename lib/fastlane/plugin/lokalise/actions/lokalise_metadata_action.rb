@@ -1,4 +1,4 @@
-require 'net/http'
+require 'faraday'
 
 
 module Fastlane
@@ -34,7 +34,7 @@ module Fastlane
             case @params[:action]
             when "download_from_lokalise"
                 release_number = params[:release_number]
-                UI.user_error! "Release number is required for Android (should be an integer and greater that 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
+                UI.user_error! "Release number is required for Android (should be an integer and greater than 0)" unless (release_number and release_number.is_a?(Integer) and release_number > 0)
                 metadata = get_metadata_from_lokalise()
                 write_lokalise_translations_to_googleplay_metadata(metadata, release_number)
             when "upload_to_lokalise"
@@ -53,15 +53,17 @@ module Fastlane
                 end
             end
         end
-
       end
 
 
       def self.create_languages(languages)
-        data = {
-          iso: languages.map { |language| fix_language_name(language, true) } .to_json
+        add_languages = languages.map { |language| fix_language_name(language, true) }
+
+        params = {
+          "languages" => add_languages.map { |language| {"lang_iso" => "#{language}"} }
         }
-        make_request("language/add", data)
+
+        make_request("projects/#{@params[:project_identifier]}/languages", params, :post)
       end
 
 
@@ -135,28 +137,41 @@ module Fastlane
       end
 
 
-      def self.make_request(path, data)
+      def self.make_request(path, params = nil, http_transport_method)
 
-        request_data = {
-          api_token: @params[:api_token],
-          id: @params[:project_identifier]
-        }.merge(data)
+        url = "https://api.lokalise.com/api2/"
 
-        uri = URI("https://api.lokalise.co/api/#{path}")
-        request = Net::HTTP::Post.new(uri)
-        request.set_form_data(request_data)
-  
-        http = Net::HTTP.new(uri.host, uri.port)
-        http.use_ssl = true
-        response = http.request(request)
+        headers = {
+          "x-api-token" => @params[:api_token],
+          "Content-Type" => "application/json"
+        }
+        conn = Faraday.new(
+          url: url,
+          headers: headers
+        )
 
-        jsonResponse = JSON.parse(response.body)
-        raise "Bad response 🉐\n#{response.body}" unless jsonResponse.kind_of? Hash
-        if jsonResponse["response"]["status"] == "success"  then
+        case http_transport_method
+        when :post
+          resp = conn.post(path) do |req|
+            req.body = params.to_json
+          end
+        when :get
+          resp = conn.get(path) do |req|
+            if params != nil
+              req.params = params
+            end
+          end
+        else
+          raise "Invalid request - use :get or :post http method"
+        end
+
+        jsonResponse = JSON.parse(resp.body)
+        raise "Bad response 🉐\n#{resp.body}" unless jsonResponse.kind_of? Hash
+        if resp.success? == true  then
           UI.success "Response #{jsonResponse} 🚀"
-        elsif jsonResponse["response"]["status"] == "error"
-          code = jsonResponse["response"]["code"]
-          message = jsonResponse["response"]["message"]
+        elsif resp.success? == false
+          code = resp.status
+          message = jsonResponse["error"]["message"]
           raise "Response error code #{code} (#{message}) 📟"
         else
           raise "Bad response 🉐\n#{jsonResponse}"
@@ -169,14 +184,16 @@ module Fastlane
         keys = []
         metadata_keys.each do |key, value|
           key = make_key_object_from_metadata(key, metadata)
-          if key 
+          if key
             keys << key
           end
         end
-        data = {
-          data: keys.to_json
+
+        params = {
+          "keys" => keys
         }
-        make_request("string/set", data)
+
+        make_request("projects/#{@params[:project_identifier]}/keys", params, :post)
       end
 
 
@@ -191,15 +208,17 @@ module Fastlane
 
 
       def self.make_key_object_from_metadata(key, metadata)
+        keys = []
         key_data = {
-          "key" => key,
-          "platform_mask" => 16,
-          "translations" => {}
+          "key_name" => key,
+          "platforms" => [@params[:platform]],
+          "translations" => []
         }
         metadata.each { |iso_code, data|
           translation = data[key]
           unless translation == nil || translation.empty?
-            key_data["translations"][fix_language_name(iso_code, true)] = translation
+            iso_code_lokalise = fix_language_name(iso_code, true)
+            key_data["translations"].push(make_translations_object_from_metadata(iso_code_lokalise, translation))
           end
         }
         unless key_data["translations"].empty? 
@@ -207,6 +226,14 @@ module Fastlane
         else
           return nil
         end
+      end
+
+      def self.make_translations_object_from_metadata(iso_code_lokalise, translation)
+        translations_obj = {
+          "language_iso" => iso_code_lokalise,
+          "translation" => translation
+        }
+        return translations_obj
       end
 
 
@@ -268,36 +295,33 @@ module Fastlane
         when "ios"
           valid_keys = metadata_key_file_itunes().keys
           valid_languages = itunes_connect_languages_in_lokalise()
-          key_name = "key_ios"
         when "android"
           valid_keys = metadata_key_file_googleplay().keys
           valid_languages = google_play_languages_in_lokalise()
-          key_name = "key_android"
         end
-        data = {
-          platform_mask: 16,
-          keys: valid_keys.to_json,
+
+        params = {
+          "include_translations" => 1,
+          "filter_platforms" => @params[:platform],
+          "filter_keys" => "#{valid_keys.join(',')}"
         }
-        response = make_request("string/list", data)
+        resp = make_request("projects/#{@params[:project_identifier]}/keys", params, :get)
+
         metadata = {}
-        response["strings"].each { |lang, translation_objects|
-          if valid_languages.include?(lang)
-            translations = {}
-            translation_objects.each { |object|
-              # The key can named differently depending on how the Lokalise Project was set up
-              key = object[key_name]
-              if !key
-                key = object['key']
+        resp["keys"].each { |key| key.each
+          key["translations"].each { |translation_obj|
+            lang = translation_obj["language_iso"]
+            if valid_languages.include? lang
+              key_name = key["key_name"][@params[:platform]]
+              translation = translation_obj["translation"]
+            
+              if valid_keys.include?(key_name) && !translation.nil? && !translation.empty?
+                fixed_lang_name = fix_language_name(lang)
+                metadata[fixed_lang_name] = {} unless metadata.has_key?(fixed_lang_name)
+                metadata[fixed_lang_name] = metadata[fixed_lang_name].merge({key_name => translation})
               end
-              translation = object["translation"]
-              if valid_keys.include?(key) && translation != nil && translation.empty? == false 
-                translations[key] = translation
-              end
-            }
-            if translations.empty? == false
-              metadata[fix_language_name(lang)] = translations
             end
-          end
+          }
         }
         return metadata
       end
@@ -373,8 +397,11 @@ module Fastlane
 
       def self.itunes_to_lokalise_language_map()
         return {
-          "nl-NL" => "nl",
           "en-US" => "en",
+          "de_DE" => "de",
+          "es_ES" => "es",
+          "fr_FR" => "fr",
+          "nl-NL" => "nl",
           "hi" => "hi_IN",
           "zh-Hans" => "zh_CN",
           "zh-Hant" => "zh_TW"
@@ -384,22 +411,28 @@ module Fastlane
 
       def self.googleplay_to_lokalise_language_map()
         return {
+          "tr-TR" => "tr",
+          "hy-AM" => "hy",
+          "my-MM" => "my",
+          "ms-MY" => "ms",
           "cs-CZ" => "cs",
           "da-DK" => "da",
+          "et" => "et-EE",
           "fi-FI" => "fi",
           "iw-IL" => "he",
           "hu-HU" => "hu",
-          "hy-AM" => "hy",
           "ja-JP" => "ja",
           "ko-KR" => "ko",
           "ky-KG" => "ky",
           "lo-LA" => "lo",
+          "lv" => "lv-LV",
+          "lt" => "lt-LT",
           "mr-IN" => "mr",
-          "my-MM" => "my",
           "no-NO" => "no",
+          "pl-PL" => "pl",
           "si-LK" => "si",
-          "sl" => "sl_SI",
-          "tr-TR" => "tr"
+          "sl" => "sl-SI",
+          "en_US" => "en"
         }
       end
 
