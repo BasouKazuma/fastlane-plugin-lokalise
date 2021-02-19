@@ -1,6 +1,7 @@
 *.gem
 Gemfile.lock
 /.bundle/
+*.DS_Store
 
 ## Documentation cache and generated files:
 /.yardoc/
