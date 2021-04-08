@@ -40,7 +40,7 @@ module Fastlane
           request_data["include_tags"] = tags
         end
 
-        uri = URI("https://api.lokalise.co/api2/projects/#{project_identifier}/files/download")
+        uri = URI("https://api.lokalise.com/api2/projects/#{project_identifier}/files/download")
         request = Net::HTTP::Post.new(uri, {'content-type' => 'application/json', 'x-api-token' => "#{token}"})
         request.body = request_data.to_json
 
