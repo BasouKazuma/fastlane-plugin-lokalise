@@ -120,6 +120,7 @@ module Fastlane
 
           destFile = File.open(path, "r")
           destFile.each_line do |oldLine|
+            oldLine.chomp!
             oldKeyValue = oldLine.split('" = "')
             translations[oldKeyValue[0]] = oldKeyValue[1]
           end
@@ -127,6 +128,7 @@ module Fastlane
 
           tempFile = File.open(tempFilePath, "r")
           tempFile.each_line do |newLine|
+            newLine.chomp!
             newKeyValue = newLine.split('" = "')
             translations[newKeyValue[0]] = newKeyValue[1]
           end
@@ -149,6 +151,7 @@ module Fastlane
 
           destFile = File.open(path, "r")
           destFile.each_line do |oldLine|
+            oldLine.chomp!
             oldKeyValue = oldLine.split('" = "')
             translations[oldKeyValue[0]] = oldKeyValue[1]
           end
@@ -156,6 +159,7 @@ module Fastlane
 
           tempFile = File.open(tempFilePath, "r")
           tempFile.each_line do |newLine|
+            newLine.chomp!
             newKeyValue = newLine.split('" = "')
             translations[newKeyValue[0]] = newKeyValue[1] unless translations[newKeyValue[0]].nil?
           end
@@ -171,14 +175,15 @@ module Fastlane
         FileUtils.rm(path) if File.file? path
 
         sortedTranslations = Hash[ translations.sort_by { |key, val| key.downcase } ]
-        
+        translationsArray = Array.new()
         File.open(path, "w+") do |file|
           sortedTranslations.each { |key, value|
             leftSide = key
             rightSide = value
             line = "#{leftSide}\" = \"#{rightSide}"
-            file.write(line)
+            translationsArray.push(line)
           }
+          file.write(translationsArray.join("\n"))
         end
       end
 
