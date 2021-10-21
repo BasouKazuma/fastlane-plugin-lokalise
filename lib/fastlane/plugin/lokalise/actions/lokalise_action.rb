@@ -62,7 +62,7 @@ module Fastlane
           response = http.request(zipRequest)
           if response.content_type == "application/zip" or response.content_type == "application/octet-stream" then
             FileUtils.mkdir_p("lokalisetmp")
-            open("lokalisetmp/a.zip", "wb") { |file| 
+            open("lokalisetmp/a.zip", "wb") { |file|
               file.write(response.body)
             }
             unzip_file("lokalisetmp/a.zip", destination, clean_destination, file_strategy)
@@ -96,81 +96,80 @@ module Fastlane
                override_file(zip_file, f, f_path)
              elsif file_strategy == "merge" then
                merge_file(zip_file, f, f_path)
-             else 
+             else
                update_file(zip_file, f, f_path)
              end
            }
         }
       end
-        
+
       def self.override_file(zip_file, file, path)
         FileUtils.rm(path) if File.file? path
         zip_file.extract(file, path)
       end
-          
+
       def self.merge_file(zip_file, file, path)
         if File.file? path then
           tempFilePath = "lokalisetmp/" + file.name
-          
+
           FileUtils.rm(tempFilePath) if File.file? tempFilePath
           FileUtils.mkdir_p(File.dirname(tempFilePath))
           zip_file.extract(file, tempFilePath)
-          
+
           translations = Hash.new
-          
+
           destFile = File.open(path, "r")
           destFile.each_line do |oldLine|
             oldKeyValue = oldLine.split('" = "')
             translations[oldKeyValue[0]] = oldKeyValue[1]
           end
           destFile.close
-          
+
           tempFile = File.open(tempFilePath, "r")
           tempFile.each_line do |newLine|
             newKeyValue = newLine.split('" = "')
             translations[newKeyValue[0]] = newKeyValue[1]
           end
           tempFile.close
-          
+
           write_file(translations, path)
           else
           zip_file.extract(file, path)
         end
       end
-      
+
       def self.update_file(zip_file, file, path)
         if File.file? path then
           tempFilePath = "lokalisetmp/" + file.name
-          
           FileUtils.rm(tempFilePath) if File.file? tempFilePath
           FileUtils.mkdir_p(File.dirname(tempFilePath))
           zip_file.extract(file, tempFilePath)
-          
+
           translations = Hash.new
-          
+
           destFile = File.open(path, "r")
           destFile.each_line do |oldLine|
             oldKeyValue = oldLine.split('" = "')
             translations[oldKeyValue[0]] = oldKeyValue[1]
           end
           destFile.close
-          
+
           tempFile = File.open(tempFilePath, "r")
           tempFile.each_line do |newLine|
             newKeyValue = newLine.split('" = "')
             translations[newKeyValue[0]] = newKeyValue[1] unless translations[newKeyValue[0]].nil?
           end
           tempFile.close
-          
+
           write_file(translations, path)
           else
           zip_file.extract(file, path)
         end
       end
-        
+
       def self.write_file(translations, path)
         FileUtils.rm(path) if File.file? path
-        
+
         sortedTranslations = Hash[ translations.sort_by { |key, val| key.downcase } ]
         
         File.open(path, "w+") do |file|
@@ -294,7 +293,7 @@ module Fastlane
 
 
       def self.is_supported?(platform)
-        [:ios, :android, :mac].include? platform 
+        [:ios, :android, :mac].include? platform
       end
 
 
