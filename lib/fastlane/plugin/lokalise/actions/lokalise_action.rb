@@ -94,9 +94,7 @@ module Fastlane
 
           zip_file.each { |f|
             f_path = File.join(destination, f.name)
-            file_exists = File.exist?(f_path)
-
-            next unless file_exists
+            next unless File.exist?(f_path)
 
             FileUtils.mkdir_p(File.dirname(f_path))
 
