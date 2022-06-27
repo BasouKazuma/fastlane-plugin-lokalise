@@ -83,23 +83,31 @@ module Fastlane
 
       def self.unzip_file(file, destination, clean_destination, file_strategy)
         Zip::File.open(file) { |zip_file|
+
           if clean_destination then
             UI.message "Cleaning destination folder ♻️"
             FileUtils.remove_dir(destination)
             FileUtils.mkdir_p(destination)
           end
+
           UI.message "Unarchiving localizations to destination 📚"
-           zip_file.each { |f|
-             f_path= File.join(destination, f.name)
-             FileUtils.mkdir_p(File.dirname(f_path))
-             if (file_strategy == "override") || !f_path.end_with?(".strings") then
-               override_file(zip_file, f, f_path)
-             elsif file_strategy == "merge" then
-               merge_file(zip_file, f, f_path)
-             else
-               update_file(zip_file, f, f_path)
-             end
-           }
+
+          zip_file.each { |f|
+            f_path = File.join(destination, f.name)
+            file_exists = File.exist?(f_path)
+
+            next unless file_exists
+
+            FileUtils.mkdir_p(File.dirname(f_path))
+
+            if (file_strategy == "override") || !f_path.end_with?(".strings") then
+              override_file(zip_file, f, f_path)
+            elsif file_strategy == "merge" then
+              merge_file(zip_file, f, f_path)
+            else
+              update_file(zip_file, f, f_path)
+            end
+          }
         }
       end
 
